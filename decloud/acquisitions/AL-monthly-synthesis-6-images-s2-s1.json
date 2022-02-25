@@ -1,0 +1,102 @@
+{
+  "t0" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_origin" : "True"
+  },
+  "t1" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_start_hours" : 100,
+    "timeframe_end_hours" : 140
+  },
+  "t2" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_start_hours" : 220,
+    "timeframe_end_hours" : 260
+  },
+  "t3" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_start_hours" : 340,
+    "timeframe_end_hours" : 380
+  },
+  "t4" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_start_hours" : 460,
+    "timeframe_end_hours" : 500
+  },
+  "t5" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": "random.randint(0, 2)",
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :72,
+    "timeframe_start_hours" : 580,
+    "timeframe_end_hours" : 620
+  },
+  "target" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": 0,
+        "max_cloud_percent": 0
+      }
+    },
+    "timeframe_start_hours" : 100,
+    "timeframe_end_hours" : 500
+  }
+}

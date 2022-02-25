@@ -1,0 +1,127 @@
+workflow:
+  rules:
+    - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
+    - if: $CI_COMMIT_BRANCH == 'master'      # Execute jobs when a new commit is pushed to master branch
+
+stages:
+  - Docker build
+  - Static Analysis
+  - Tests
+
+Build the docker image:
+  stage: Docker build
+  allow_failure: false
+  tags: [dind]
+  image: docker/compose:1.29.2
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_HOST: tcp://docker:2375
+  services:
+    - name: docker:dind
+      command: [dockerd, '-H', 'tcp://0.0.0.0:2375']
+  before_script:
+    # docker login asks for the password to be passed through stdin for security
+    # we use $CI_REGISTRY_PASSWORD here which is a special variable provided by GitLab
+    # https://docs.gitlab.com/ce/ci/variables/predefined_variables.html
+    - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - docker info
+    - >
+      docker build
+      --pull
+      --cache-from $CI_REGISTRY_IMAGE:latest
+      --label "org.opencontainers.image.title=$CI_PROJECT_TITLE"
+      --label "org.opencontainers.image.url=$CI_PROJECT_URL"
+      --label "org.opencontainers.image.created=$CI_JOB_STARTED_AT"
+      --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
+      --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
+      --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+      --build-arg "BASE_IMAGE=gitlab-registry.irstea.fr/remi.cresson/otbtf/otbtf3.0:cpu-basic-dev"
+      .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
+
+.static_analysis_base:
+  image: $CI_REGISTRY_IMAGE:latest
+  stage: Static Analysis
+  allow_failure: true
+
+flake8:
+  extends: .static_analysis_base
+  script:
+   - sudo apt update && sudo apt install -y flake8 && python -m flake8 --max-line-length=120 $PWD/decloud
+
+pylint:
+  extends: .static_analysis_base
+  script:
+  - sudo apt update && sudo apt install -y pylint && pylint --disable=too-many-nested-blocks,too-many-locals,too-many-statements,too-few-public-methods,too-many-instance-attributes,too-many-arguments,invalid-name,cell-var-from-loop,too-many-branches,too-many-ancestors --ignored-modules=tensorflow,git,rtree,scipy,tensorboard,libamalthee,pandas --max-line-length=120 $PWD/decloud
+
+codespell:
+  extends: .static_analysis_base
+  script:
+    - sudo pip install codespell && codespell --skip="*.png,*.template,*.pbs,*.jpg,*git/lfs*"
+
+.applications_test_base:
+  image: $CI_REGISTRY_IMAGE:latest
+  stage: Tests
+  before_script:
+   - export PYTHONPATH=$PYTHONPATH:$PWD
+   - wget -P decloud_data --no-verbose --recursive --level=inf --no-parent -R "index.html*" --cut-dirs=3 --no-host-directories http://indexof.montpellier.irstea.priv/projets/geocicd/decloud/
+   - mkdir tests_artifacts
+   - export DECLOUD_DATA_DIR="$PWD/decloud_data"
+
+  artifacts:
+    when: on_failure
+    paths:
+     - "*.xml"
+     - "tests_artifacts/*.*"
+    expire_in: 1 week
+
+  after_script:
+    - cp -r /tmp/* tests_artifacts/
+
+display_apps_helps:
+  extends: .applications_test_base
+  script:
+    - python decloud/models/train_from_tfrecords.py --help
+    - python decloud/models/create_tfrecords.py --help
+    - python decloud/preprocessing/sentinel1_prepare.py --help
+    - python decloud/preprocessing/sentinel2_prepare.py --help
+    - python decloud/preprocessing/dem_prepare.py --help
+    - python decloud/analysis/tile_coverage.py --help
+    - python decloud/analysis/images_stats.py --help
+    - python decloud/analysis/patches_coverage.py --help
+    - python decloud/production/crga_processor.py --help
+
+inference:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_inference.xml tests/inference_unittest.py
+
+
+s1_prepare:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_sentinel1_prepare.xml tests/sentinel1_prepare_unittest.py
+
+s2_prepare:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_sentinel2_prepare.xml tests/sentinel2_prepare_unittest.py
+
+DEM_prepare:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_dem_prepare.xml tests/dem_unittest.py
+
+create_tfrecords:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_create_tfrecords.xml tests/create_tfrecords_unittest.py
+
+train_from_tfrecords:
+  extends: .applications_test_base
+  script:
+    - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_train_from_tfrecords.xml tests/train_from_tfrecords_unittest.py
+

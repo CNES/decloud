@@ -1,0 +1,57 @@
+{
+  "tm1" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": 1,
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :24,
+    "timeframe_start_hours" : -240,
+    "timeframe_end_hours" : -360
+  },
+  "t" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": 0,
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :24,
+    "timeframe_origin" : "True"
+  },
+  "target" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": 0,
+        "max_cloud_percent": 0
+      }
+    },
+    "timeframe_start_hours" : -240,
+    "timeframe_end_hours" : 240
+  },
+  "tp1" : {
+    "acquisition" : {
+      "S2" : {
+        "type": "S2",
+        "min_cloud_percent": 1,
+        "max_cloud_percent": 100
+      },
+      "S1" : {
+        "type": "S1"
+      }
+    },
+    "max_s1s2_gap_hours" :24,
+    "timeframe_start_hours" : 240,
+    "timeframe_end_hours" : 360
+  }
+}

@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+"""
+Copyright (c) 2020-2022 INRAE
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+"""CRGA OS2 David model (all bands)"""
+from tensorflow.keras import layers
+from decloud.models.crga_os2_base_all_bands import crga_os2_base_all_bands
+import decloud.preprocessing.constants as constants
+
+
+class crga_os2_david_all_bands(crga_os2_base_all_bands):
+    """
+    CRGA OS2 David model (all bands)
+    """
+    def get_outputs(self, normalized_inputs):
+
+        input_dict = {"ante": [normalized_inputs["s1_tm1"],
+                               normalized_inputs["s2_tm1"],
+                               normalized_inputs["s2_20m_tm1"]],
+                      "current": [normalized_inputs["s1_t"],
+                                  normalized_inputs["s2_t"],
+                                  normalized_inputs["s2_20m_t"]],
+                      "post": [normalized_inputs["s1_tp1"],
+                               normalized_inputs["s2_tp1"],
+                               normalized_inputs["s2_20m_tp1"]]}
+
+        # The network
+        features = []
+        conv1 = layers.Conv2D(64, 5, 1, activation='relu', name="conv1_relu", padding="same")
+        conv1_20m = layers.Conv2D(64, 3, 1, activation='relu', name="conv1_20m_relu", padding="same")
+        conv1_dem = layers.Conv2D(64, 3, 1, activation='relu', name="conv1_dem_relu", padding="same")
+        conv2 = layers.Conv2D(128, 3, 2, activation='relu', name="conv2_bn_relu", padding="same")
+        conv2_20m = layers.Conv2D(128, 3, 1, activation='relu', name="conv2_20m_bn_relu", padding="same")
+        conv3 = layers.Conv2D(256, 3, 2, activation='relu', name="conv3_bn_relu", padding="same")
+        deconv1 = layers.Conv2DTranspose(128, 3, 2, activation='relu', name="deconv1_bn_relu", padding="same")
+        deconv2 = layers.Conv2DTranspose(64, 3, 2, activation='relu', name="deconv2_bn_relu", padding="same")
+        deconv2_20m = layers.Conv2DTranspose(64, 3, 1, activation='relu', name="deconv2_20m_bn_relu", padding="same")
+        conv4 = layers.Conv2D(4, 5, 1, activation='relu', name="s2_estim", padding="same")
+        conv4_20m = layers.Conv2D(6, 3, 1, activation='relu', name="s2_20m_estim", padding="same")
+        for input_image in input_dict:
+            net_10m = layers.concatenate(input_dict[input_image][:2], axis=-1)
+            net_10m = conv1(net_10m)  # 256
+            net_10m = conv2(net_10m)  # 128
+            net_20m = conv1_20m(input_dict[input_image][2])  # 128
+            net_20m = conv2_20m(net_20m)  # 128
+            features_20m = [net_10m, net_20m]
+            if self.has_dem():
+                features_20m.append(conv1_dem(normalized_inputs[constants.DEM_KEY]))
+            net = layers.concatenate(features_20m, axis=-1)  # 128
+            net = conv3(net)  # 64
+            features.append(net)
+
+        net = layers.concatenate(features, axis=-1)
+        net = deconv1(net)  # 128
+        net_10m = deconv2(net)  # 256
+        net_20m = deconv2_20m(net)  # 128
+
+        s2_out = conv4(net_10m)
+        s2_20m_out = conv4_20m(net_20m)
+
+        # 10m-resampled stack that will be the output for inference (not used for training)
+        s2_20m_resampled = layers.UpSampling2D(size=(2, 2))(s2_20m_out)
+        s2_all_bands = layers.concatenate([s2_out, s2_20m_resampled], axis=-1)
+
+        return {"s2_target": s2_out, "s2_20m_target": s2_20m_out, 's2_all_bands_estim': s2_all_bands}
