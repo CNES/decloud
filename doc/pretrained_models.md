@@ -34,18 +34,18 @@ All models use Sentinel-2 and Sentinel-1 images as inputs. The inputs/output of 
 ## Time series processor
 This is the highest-level way of running the inference of a model. For example, you can run a CRGA model on a time series like this:
 
-<pre><code>python production/crga_timeseries_processor.py \
-<span style="padding:0 0 0 90px;color:blue">--s2_dir</span>  S2_PREPARE/T31TCJ \
-<span style="padding:0 0 0 90px;color:blue">--s1_dir</span>  S1_PREPARE/T31TCJ \
-<span style="padding:0 0 0 90px;color:blue">--model</span>   crga_os2_occitanie_pretrained/ \
-<span style="padding:0 0 0 90px;color:blue">--dem</span>     DEM_PREPARE/T31TCJ.tif \
-<span style="padding:0 0 0 90px;color:blue">--out_dir</span> reconstructed_timeseries/ \
-<span style="padding:0 0 0 90px;color:grey">--write_intermediate --overwrite</span> \
-<span style="padding:0 0 0 90px;color:grey">--start</span> 2018-01-01 <span style="color:grey">--end</span> 2018-12-31 \
-<span style="padding:0 0 0 90px;color:grey">--ulx</span> 306000 <span style="color:grey">--uly</span> 4895000 <span style="color:grey">--lrx</span> 320000 <span style="color:grey">--lry</span> 4888000
-</code></pre>
-*(mandatory arguments in blue, optional arguments in grey)*
-
+```
+python production/crga_timeseries_processor.py
+        --s2_dir  S2_PREPARE/T31TCJ
+        --s1_dir  S1_PREPARE/T31TCJ
+        --model   crga_os2_occitanie_pretrained/
+        --dem     DEM_PREPARE/T31TCJ.tif
+        --out_dir reconstructed_timeseries/
+# Optional arguments:
+        --write_intermediate --overwrite
+        --start 2018-01-01 --end 2018-12-31
+        --ulx 306000 --uly 4895000 --lrx 320000 --lry 4888000
+```
 
 ## Processor
 For instance, we use `crga_processor.py` to perform the inference of the *crga* models.

@@ -14,17 +14,18 @@ Some pre-trained models are available at this [url](https://nextcloud.inrae.fr/s
 
 The easiest way to run a model is to run the timeseries processor such as: 
 
-<pre><code>python production/meraner_timeseries_processor.py
-<span style="padding:0 0 0 90px;color:blue">--s2_dir</span>  S2_PREPARE/T31TCJ 
-<span style="padding:0 0 0 90px;color:blue">--s1_dir</span>  S1_PREPARE/T31TCJ
-<span style="padding:0 0 0 90px;color:blue">--model</span>   merunet_occitanie_pretrained/
-<span style="padding:0 0 0 90px;color:blue">--dem</span>     DEM_PREPARE/T31TCJ.tif
-<span style="padding:0 0 0 90px;color:blue">--out_dir</span> meraner_timeseries/
-<span style="padding:0 0 0 90px;color:grey">--write_intermediate --overwrite</span>
-<span style="padding:0 0 0 90px;color:grey">--start</span> 2018-01-01 <span style="color:grey">--end</span> 2018-12-31 
-<span style="padding:0 0 0 90px;color:grey">--ulx</span> 306000 <span style="color:grey">--uly</span> 4895000 <span style="color:grey">--lrx</span> 320000 <span style="color:grey">--lry</span> 4888000
-</code></pre>
-*(mandatory arguments in blue, optional arguments in grey)*
+```
+python production/meraner_timeseries_processor.py
+        --s2_dir  S2_PREPARE/T31TCJ 
+        --s1_dir  S1_PREPARE/T31TCJ
+        --model   merunet_occitanie_pretrained/
+        --dem     DEM_PREPARE/T31TCJ.tif
+        --out_dir meraner_timeseries/
+# Optional arguments:
+        --write_intermediate --overwrite
+        --start 2018-01-01 --end 2018-12-31 
+        --ulx 306000 --uly 4895000 --lrx 320000 --lry 4888000
+```
 
 You can find more info on available models and how to use these models [here](doc/pretrained_models.md)
 
