@@ -118,13 +118,11 @@ class InferenceTest(DecloudTest):
             self.get_path('baseline/PREPARE/S2_PREPARE/T31TEJ/SENTINEL2A_20201024-104859-766_L2A_T31TEJ_C_V2-2/')]
 
         outpath = '/tmp/reconstructed_w_preprocessor.tif'
-        crga_processor.main(["--il_s1before", *s1_tm1, "--il_s2before", *s2_tm1,
-                             "--il_s1", *s1_t, "--in_s2", s2_t,
-                             "--il_s1after", *s1_tp1, "--il_s2after", *s2_tp1,
-                             "--dem", self.get_path('baseline/PREPARE/DEM_PREPARE/T31TEJ.tif'),
-                             "--output", outpath, '--maxgap', '48',
-                             '--savedmodel', model_path])
-
+        crga_processor.crga_processor(il_s1before=s1_tm1, il_s2before=s2_tm1,
+                                      il_s1=s1_t, in_s2=s2_t,
+                                      il_s1after=s1_tp1, il_s2after=s2_tp1,
+                                      dem=self.get_path('baseline/PREPARE/DEM_PREPARE/T31TEJ.tif'),
+                                      output=outpath, maxgap=48, savedmodel=model_path)
 
         # Just a dummy test
         self.assertTrue(system.file_exists(outpath))
