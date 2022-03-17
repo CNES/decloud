@@ -180,4 +180,4 @@ def main():
 
 
 if __name__ == "__main__":
-    system.run_and_terminate(main)
+    sys.exit(main())
