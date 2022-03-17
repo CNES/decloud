@@ -49,4 +49,10 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     python_requires=">=3.6",
     keywords="remote sensing, deep learning, gapfilling, remove clouds, satellite imagery, otb, orfeotoolbox",
+    entry_points={
+        'console_scripts': [
+            'crga_processor=decloud.production.crga_processor:main',
+            'meraner_processor=decloud.production.meraner_processor:main'
+        ],
+    }
 )
