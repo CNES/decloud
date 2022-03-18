@@ -272,7 +272,7 @@ if __name__ == "__main__":
             input_s1_products.sort(key=_closest_date, reverse=True)
             input_s1_images_10m = [product.get_raster_10m() for product in input_s1_products]
             # creating a mosaic with the N closest S1 images
-            s1t = pyotb.App('Mosaic', input_s1_images_10m[:s1_Nimages], nodata=0)
+            s1t = pyotb.App('Mosaic', input_s1_images_10m[-s1_Nimages:], nodata=0)
 
             candidates.append({'s2': s2_product, 's1': s1t})
 
