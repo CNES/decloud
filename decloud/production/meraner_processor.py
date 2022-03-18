@@ -142,7 +142,7 @@ def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20
 
 
 # ------------------------------------------------------- Main ---------------------------------------------------------
-def main(args):
+def main():
     # Logger
     system.basic_logging_init()
 
@@ -180,4 +180,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    system.run_and_terminate(main)
+    sys.exit(main())

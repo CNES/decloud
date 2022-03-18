@@ -190,7 +190,7 @@ def crga_processor(il_s1after, il_s1before, il_s1, il_s2after, il_s2before, in_s
 
 
 # ------------------------------------------------------- Main ---------------------------------------------------------
-def main(args):
+def main():
     # Logger
     system.basic_logging_init()
 
@@ -230,7 +230,7 @@ def main(args):
         parser.print_help()
         parser.exit()
 
-    params = parser.parse_args(args)
+    params = parser.parse_args()
 
     crga_processor(params.il_s1after, params.il_s1before, params.il_s1, params.il_s2after, params.il_s2before,
                    params.in_s2, params.dem, params.savedmodel,
@@ -239,4 +239,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    system.run_and_terminate(main)
+    sys.exit(main())

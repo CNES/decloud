@@ -27,4 +27,8 @@ RUN cd /src/otb/otb/Modules/Remote/ && git clone https://gitlab.irstea.fr/remi.c
 COPY . /src/otb/otb/Modules/Remote/decloud/
 RUN cd /src/otb/build/OTB/build && cmake /src/otb/otb/ -DModule_SimpleExtractionTools=ON -DModule_MLUtils=ON -DBUILD_TESTING=OFF -DModule_OTBDecloud=ON 
 RUN cd /src/otb/build/OTB/build && make -j $(nproc --all) install
+
+# Install decloud
+RUN cd /src/otb/otb/Modules/Remote/decloud/ && python3 -m pip install .
+
 USER otbuser
