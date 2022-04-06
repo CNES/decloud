@@ -9,6 +9,20 @@ Representative illustrations:
 
 *Examples of de-clouded Sentinel-2 images using the single date SAR/Optical U-Net model.*
 
+## Cite
+
+```
+@article{cresson2022clouds,
+  title={Comparison of convolutional neural networks for cloudy optical images reconstruction from single or multitemporal joint SAR and optical images},
+  author={Cresson, R., Narcon, N., Gaetano, R., Dupuis A., Tanguy, Y., May, S., Commandre, B.},
+  journal={arXiv preprint arXiv:2204.00424},
+  year={2022}
+}
+
+https://doi.org/10.48550/arXiv.2204.00424
+
+```
+
 ## Quickstart: Run a pre-trained model
 Some pre-trained models are available at this [url](https://nextcloud.inrae.fr/s/DEy4PgR2igSQKKH). 
 
