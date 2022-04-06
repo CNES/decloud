@@ -18,10 +18,9 @@ Representative illustrations:
   journal={arXiv preprint arXiv:2204.00424},
   year={2022}
 }
+```
 
 https://doi.org/10.48550/arXiv.2204.00424
-
-```
 
 ## Quickstart: Run a pre-trained model
 Some pre-trained models are available at this [url](https://nextcloud.inrae.fr/s/DEy4PgR2igSQKKH). 
