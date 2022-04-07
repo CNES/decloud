@@ -296,7 +296,7 @@ class S2_ESA(S2ProductBase):
 
             mnnodata = otbApplication.Registry.CreateApplication('ManageNoData')
             mnnodata.ConnectImage('in', conc, 'out')
-            mnnodata.SetParameterString('mode', 'change')
+            mnnodata.SetParameterString('mode', 'changevalue')
             mnnodata.SetParameterFloat('mode.changevalue.newv', self.INTERNAL_NODATA_VALUE)
             mnnodata.Execute()
 
