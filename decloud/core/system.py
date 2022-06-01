@@ -46,7 +46,7 @@ def get_commit_hash():
     except TypeError:
         try:
             commit_hash = 'DETACHED_' + repo.head.object.hexsha[0:5]
-        except TypeError:
+        except ValueError:
             commit_hash = 'NoHash'
 
     return commit_hash
