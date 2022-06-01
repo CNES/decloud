@@ -41,13 +41,16 @@ def get_commit_hash():
     """ Return the git hash of the repository """
     repo = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
 
+    commit_hash = "nohash"
     try:
-        commit_hash = repo.active_branch.name + "_" + repo.head.object.hexsha[0:5]
-    except TypeError:
-        try:
-            commit_hash = 'DETACHED_' + repo.head.object.hexsha[0:5]
-        except ValueError:
-            commit_hash = 'NoHash'
+        commit_hash = repo.head.object.hexsha[0:5]
+    except (ValueError, TypeError) as e:
+        print(f"Unable to get commit hash! {e}")
+
+    try:
+        commit_hash = repo.active_branch.name + "_" + commit_hash
+    except (ValueError, TypeError) as e:
+        print(f"Unable to get branch name! {e}")
 
     return commit_hash
 
