@@ -160,6 +160,7 @@ cpu_deploy:
 
 gpu_deploy:
   extends: .ship_base
+  script:
     - >
       docker build
       --pull
