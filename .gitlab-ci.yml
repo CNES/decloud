@@ -1,16 +1,15 @@
+
 workflow:
   rules:
-    - if: $CI_MERGE_REQUEST_ID               # Execute jobs in merge request context
-    - if: $CI_COMMIT_BRANCH == 'master'      # Execute jobs when a new commit is pushed to master branch
+    - if: $CI_MERGE_REQUEST_ID || $CI_COMMIT_REF_NAME =~ /master/ # Execute jobs in merge request context, or commit in master branch
 
 stages:
   - Docker build
   - Static Analysis
   - Tests
+  - Ship
 
-Build the docker image:
-  stage: Docker build
-  allow_failure: false
+.dind_base:
   tags: [dind]
   image: docker/compose:1.29.2
   variables:
@@ -24,6 +23,13 @@ Build the docker image:
     # we use $CI_REGISTRY_PASSWORD here which is a special variable provided by GitLab
     # https://docs.gitlab.com/ce/ci/variables/predefined_variables.html
     - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+
+Build the docker image:
+  stage: Docker build
+  allow_failure: false
+  extends: .dind_base
+  except:
+    - master
   script:
     - docker info
     - >
@@ -36,11 +42,9 @@ Build the docker image:
       --label "org.opencontainers.image.revision=$CI_COMMIT_SHA"
       --label "org.opencontainers.image.version=$CI_COMMIT_REF_NAME"
       --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-      --build-arg "BASE_IMAGE=gitlab-registry.irstea.fr/remi.cresson/otbtf/otbtf3.0:cpu-basic-dev"
+      --build-arg "BASE_IMAGE=gitlab-registry.irstea.fr/remi.cresson/otbtf/3.2.1:cpu-basic-dev"
       .
     - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
-    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME $CI_REGISTRY_IMAGE:latest
-    - docker push $CI_REGISTRY_IMAGE:latest
 
 .static_analysis_base:
   image: $CI_REGISTRY_IMAGE:latest
@@ -50,7 +54,7 @@ Build the docker image:
 flake8:
   extends: .static_analysis_base
   script:
-   - sudo apt update && sudo apt install -y flake8 && python -m flake8 --max-line-length=120 $PWD/decloud
+   - sudo apt update && sudo apt install -y flake8 && python -m flake8 -ignore=E402 --max-line-length=120 $PWD/decloud
 
 pylint:
   extends: .static_analysis_base
@@ -125,3 +129,13 @@ train_from_tfrecords:
   script:
     - pytest -o log_cli=true --log-cli-level=INFO --junitxml=report_train_from_tfrecords.xml tests/train_from_tfrecords_unittest.py
 
+deploy:
+  stage: Ship
+  only:
+    - master
+  extends: .dind_base
+  script:
+    - echo "Shipping!"
+    - docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    - docker tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME $CI_REGISTRY_IMAGE:latest
+    - docker push $CI_REGISTRY_IMAGE:latest
