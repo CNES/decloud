@@ -44,7 +44,10 @@ def get_commit_hash():
     try:
         commit_hash = repo.active_branch.name + "_" + repo.head.object.hexsha[0:5]
     except TypeError:
-        commit_hash = 'DETACHED_' + repo.head.object.hexsha[0:5]
+        try:
+            commit_hash = 'DETACHED_' + repo.head.object.hexsha[0:5]
+        except TypeError:
+            commit_hash = 'NoHash'
 
     return commit_hash
 
@@ -55,7 +58,7 @@ def get_directories(root):
     :param root: root directory
     :return: list of directories
     """
-    return [pathify(root) + item for item in os.listdir(root)]
+    return [os.path.join(root, item) for item in os.listdir(root)]
 
 
 def get_files(directory, ext=None):
