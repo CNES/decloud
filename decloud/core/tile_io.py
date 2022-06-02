@@ -21,6 +21,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 """Classes for Sentinel images access"""
+import os
 import datetime
 import itertools
 import json
@@ -70,9 +71,9 @@ def s1_filename_to_md(filename):
     metadata = dict()
     splits = basename.split("_")
     if len(splits) != 7:
-        raise Exception("{} not a S1 image (wrong number of splits between \"_\" in filename)".format(filename))
+        raise Exception(f"{filename} not a S1 image (wrong number of splits between \"_\" in filename)")
     if len(splits[5]) < 15:
-        raise Exception("{} not a S1 archive (wrong date format)".format(filename))
+        raise Exception(f"{filename} not a S1 archive (wrong date format)")
     date_str = splits[5][:15]
     metadata["tile"] = splits[1]
     if date_str[9:15] == "xxxxxx":
@@ -110,7 +111,7 @@ def create_s1_image(vvvh_gtiff, ref_patchsize, patchsize_10m):
     pth = system.dirname(vvvh_gtiff)
 
     # Compute stats
-    edge_stats_fn = system.pathify(pth) + system.new_bname(metadata["filename"], constants.SUFFIX_STATS_S1)
+    edge_stats_fn = os.path.join(pth, system.new_bname(metadata["filename"], constants.SUFFIX_STATS_S1))
     compute_patches_stats(image=metadata["filename"], output_stats=edge_stats_fn, expr="im1b1==0&&im1b2==0",
                           patchsize=ref_patchsize)
 
@@ -145,7 +146,7 @@ def s2_filename_to_md(filename):
     metadata = dict()
     splits = basename.split("_")
     if len(splits) < 4:
-        raise Exception("{} might not be a S2 product".format(filename))
+        raise Exception(f"{filename} might not be a S2 product")
     metadata["tile"] = splits[3]
     datestr = splits[1]
     metadata["date"] = datetime.datetime.strptime(datestr[:-1], '%Y%m%d-%H%M%S-%f')
@@ -180,7 +181,7 @@ def compute_patches_stats(image, output_stats, patchsize, expr=""):
                 raise Exception("\"image\" must be of type str, if no expr is provided!")
             app.SetParameterString("in", image)
         app.SetParameterInt("patchsize", patchsize)
-        app.SetParameterString("out", "{}?&gdal:co:COMPRESS=DEFLATE".format(output_stats))
+        app.SetParameterString("out", f"{output_stats}?&gdal:co:COMPRESS=DEFLATE")
         app.SetParameterOutputImagePixelType("out", otbApplication.ImagePixelType_uint16)
         app.ExecuteAndWriteOutput()
         system.declare_complete(output_stats)
@@ -216,7 +217,7 @@ def create_s2_image_from_dir(s2_product_dir, ref_patchsize, patchsize_10m, with_
     # Check that files exists
     def _check(title, filename):
         if filename is None:
-            raise Exception("File for {} does not exist in product {}".format(title, s2_product_dir))
+            raise Exception(f"File for {title} does not exist in product {s2_product_dir}")
 
     _check("edge mask", edg_mask)
     _check("cloud mask", cld_mask)
@@ -231,13 +232,13 @@ def create_s2_image_from_dir(s2_product_dir, ref_patchsize, patchsize_10m, with_
     logging.debug("\t20m bands: %s", b20m_imgs)
 
     # Compute stats
-    clouds_stats_fn = system.pathify(s2_product_dir) + system.new_bname(cld_mask, constants.SUFFIX_STATS_S2)
-    edge_stats_fn = system.pathify(s2_product_dir) + system.new_bname(edg_mask, constants.SUFFIX_STATS_S2)
+    clouds_stats_fn = os.path.join(s2_product_dir, system.new_bname(cld_mask, constants.SUFFIX_STATS_S2))
+    edge_stats_fn = os.path.join(s2_product_dir, system.new_bname(edg_mask, constants.SUFFIX_STATS_S2))
     compute_patches_stats(image=cld_mask, output_stats=clouds_stats_fn, expr="im1b1>0", patchsize=ref_patchsize)
     compute_patches_stats(image=edg_mask, output_stats=edge_stats_fn, patchsize=ref_patchsize)
 
     # Return a s2 image class
-    metadata = s2_filename_to_md(system.pathify(s2_product_dir))
+    metadata = s2_filename_to_md(s2_product_dir)
     return S2Image(acq_date=metadata["date"],
                    edge_stats_fn=edge_stats_fn,
                    bands_10m_fn=b10m_imgs,
@@ -333,7 +334,7 @@ class AbstractImage(ABC):
         :return: a numpy array
         """
         if key not in self.patch_sources:
-            raise Exception("Key {} not in patches sources. Available sources keys: {}".format(key, self.patch_sources))
+            raise Exception(f"Key {key} not in patches sources. Available sources keys: {self.patch_sources}")
         return self.patch_sources[key].get(patch_location=patch_location)
 
     @abstractmethod
@@ -917,7 +918,7 @@ class TileHandler:
                         new_sample['geoinfo'] = \
                             src.patch_sources[KEY_S2_BANDS_10M].get_geographic_info(patch_location=tuple_pos)
                     else:
-                        raise Exception("Unknown key {}!".format(sx_key))
+                        raise Exception(f"Unknown key {sx_key}!")
                     src_dict = src.get(patch_location=tuple_pos)
                     for src_key, src_np_arr in src_dict.items():
                         # the final key is composed in concatenating key, "_", src_key
@@ -971,7 +972,7 @@ class TilesLoader(dict):
             if key in data:
                 value = data[key]
                 assert isinstance(value, str)
-                return system.pathify(value)
+                return value
             return None
 
         # Paths
@@ -980,12 +981,12 @@ class TilesLoader(dict):
         self.dem_tiles_root_dir = get_pth("DEM_ROOT_DIR")
 
         if self.s2_tiles_root_dir is None:
-            raise Exception("S2_ROOT_DIR key not found in {}".format(the_json))
+            raise Exception(f"S2_ROOT_DIR key not found in {the_json}")
 
         # Tiles list
         self.tiles_list = data["TILES"]
         if self.tiles_list is None:
-            raise Exception("TILES key not found in {}".format(the_json))
+            raise Exception(f"TILES key not found in {the_json}")
         if not isinstance(self.tiles_list, list):
             raise Exception("TILES value must be a list of strings!")
 
@@ -995,7 +996,7 @@ class TilesLoader(dict):
             def _get_tile_pth(root_dir, current_tile=tile):
                 """ Returns the directory for the current tile """
                 if root_dir is not None:
-                    return root_dir + current_tile
+                    return os.path.join(root_dir, current_tile)
                 return None
 
             s1_dir = _get_tile_pth(self.s1_tiles_root_dir)

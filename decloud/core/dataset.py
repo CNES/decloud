@@ -436,7 +436,6 @@ class RoisLoader(dict):
         assert root_dir_key in data
         self.rois_root_dir = data[root_dir_key]
         assert isinstance(self.rois_root_dir, str)
-        self.rois_root_dir = system.pathify(self.rois_root_dir)
 
         def get_list(key):
             """
@@ -464,7 +463,7 @@ class RoisLoader(dict):
         """
         tiles = {}
         for tile in tiles_list:
-            roi_file = "{}{}_{}.tif".format(self.rois_root_dir, tile, suffix)
+            roi_file = os.path.join(self.rois_root_dir, f"{tile}_{suffix}.tif")
             assert system.file_exists(roi_file)
             tiles.update({tile: roi_file})
         self.update({"roi_{}".format(suffix): tiles})
