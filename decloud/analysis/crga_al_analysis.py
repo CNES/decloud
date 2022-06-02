@@ -26,6 +26,7 @@ This scripts summarizes the number of samples that we can get from an Acquisitio
 suited for single optical image reconstruction from date SAR/optical pair, for different
 parameters of the AcquisitionsLayout
 """
+import os
 import argparse
 import logging
 from decloud.acquisitions.sensing_layout import AcquisitionsLayout, S1Acquisition, S2Acquisition
@@ -139,8 +140,8 @@ for max_s1s2_gap_hours in params.maxgaps1s2_list:
                     np_counts[pos[0], pos[1]] += nb_samples_in_patch
 
                 # Export
-                out_fn = "count_gap{}_range{}-{}_{}.tif".format(max_s1s2_gap_hours, int_radius, ext_radius, tile_name)
-                out_fn = system.pathify(params.out_dir) + out_fn
+                out_fn = f"count_gap{max_s1s2_gap_hours}_range{int_radius}-{ext_radius}_{tile_name}.tif"
+                out_fn = os.path.join(params.out_dir, out_fn)
                 logging.info("Saving %s", out_fn)
                 raster.save_numpy_array_as_raster(ref_fn=ref_fn, np_arr=np_counts, out_fn=out_fn, scale=scale)
 
