@@ -84,16 +84,7 @@ def get_files(directory, ext=None):
 
 def new_bname(filename, suffix):
     """ return a new basename (without path, without extension, + suffix) """
-    filename = filename[filename.rfind("/"):]
-    filename = filename[:filename.rfind(".")]
-    return filename + "_" + suffix
-
-
-def pathify(pth):
-    """ Adds posix separator if needed """
-    if not pth.endswith("/"):
-        pth += "/"
-    return pth
+    return pathlib.Path(filename).stem + "_" + suffix
 
 
 def mkdir(pth):
