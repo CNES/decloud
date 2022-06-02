@@ -59,7 +59,7 @@ Build the docker image:
 flake8:
   extends: .static_analysis_base
   script:
-   - sudo apt update && sudo apt install -y flake8 && python -m flake8 -ignore=E402 --max-line-length=120 $PWD/decloud
+   - sudo apt update && sudo apt install -y flake8 && python -m flake8 --ignore=E402 --max-line-length=120 $PWD/decloud
 
 pylint:
   extends: .static_analysis_base
