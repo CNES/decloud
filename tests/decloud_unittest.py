@@ -7,7 +7,7 @@ import filecmp
 import gdal
 import otbApplication as otb
 from abc import ABC
-from decloud.core.system import get_env_var, pathify, basename
+from decloud.core.system import get_env_var, basename
 
 
 class DecloudTest(ABC, unittest.TestCase):
@@ -15,7 +15,7 @@ class DecloudTest(ABC, unittest.TestCase):
     DECLOUD_DATA_DIR = get_env_var("DECLOUD_DATA_DIR")
 
     def get_path(self, path):
-        return pathify(self.DECLOUD_DATA_DIR) + path
+        return os.path.join(self.DECLOUD_DATA_DIR, path)
 
     def compare_images(self, image, reference, mae_threshold=0.01):
 
