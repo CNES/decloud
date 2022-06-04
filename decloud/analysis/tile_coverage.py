@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 """
 Compute cloud coverage and pixel validity from an input set of tiles
 """
+import os
 import argparse
 import logging
 import numpy as np
@@ -46,7 +47,7 @@ def compute_stats(tile_name, tile_handler):
     :param tile_handler: Tile handler instance
     """
     ref_fn = tile_handler.s2_images[0].clouds_stats_fn
-    out_prefix = system.pathify(params.out_dir) + tile_name
+    out_prefix = os.path.join(params.out_dir, tile_name)
 
     # Statistics
     cloud_cov = np.sum(np.multiply(tile_handler.s2_images_validity, tile_handler.s2_images_cloud_coverage), axis=0)

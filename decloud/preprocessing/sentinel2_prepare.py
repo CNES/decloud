@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 """Pre-process one Sentinel-2 image"""
+import os
 import logging
 import argparse
 import otbApplication
@@ -43,7 +44,7 @@ def fconc(il, suffix, tilesize, out_tile_dir, pixel_type=otbApplication.ImagePix
     logging.info("Concatenate + Tile + Compress GeoTiff for files: %s", "".join(il))
     out_fn = system.basename(il[0])
     out_fn = out_fn[:out_fn.rfind("_")]
-    out_fn = out_tile_dir + out_fn + "_" + suffix
+    out_fn = os.path.join(out_tile_dir, out_fn + "_" + suffix)
     out_fn += ".tif?&gdal:co:COMPRESS=DEFLATE"
     out_fn += "&streaming:type=tiled&streaming:sizemode=height&streaming:sizevalue={}".format(4 * tilesize)
     out_fn += "&gdal:co:TILED=YES&gdal:co:BLOCKXSIZE={ts}&gdal:co:BLOCKYSIZE={ts}".format(ts=tilesize)
@@ -130,7 +131,7 @@ def main(args):
     logging.info("Product name is %s", product_name)
 
     # Out directory
-    out_tile_dir = system.pathify(params.out_s2_dir) + tile_name + "/" + product_name + "/"
+    out_tile_dir = os.path.join(params.out_s2_dir, tile_name, product_name)
     logging.info("Create or use the following output directory: %s", out_tile_dir)
     system.mkdir(out_tile_dir)
 

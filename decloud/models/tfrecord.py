@@ -44,12 +44,12 @@ class TFRecords:
         if system.is_dir(path) or not os.path.exists(path):
             self.dirpath = path
             system.mkdir(self.dirpath)
-            self.tfrecords_pattern_path = "{}*.records".format(system.pathify(self.dirpath))
+            self.tfrecords_pattern_path = f"{self.dirpath}/*.records"
         else:
             self.dirpath = system.dirname(path)
             self.tfrecords_pattern_path = path
-        self.output_types_file = "{}output_types.json".format(system.pathify(self.dirpath))
-        self.output_shape_file = "{}output_shape.json".format(system.pathify(self.dirpath))
+        self.output_types_file = f"{self.dirpath}/output_types.json"
+        self.output_shape_file = f"{self.dirpath}/output_shape.json"
         self.output_shape = self.load(self.output_shape_file) if os.path.exists(self.output_shape_file) else None
         self.output_types = self.load(self.output_types_file) if os.path.exists(self.output_types_file) else None
 
@@ -99,10 +99,10 @@ class TFRecords:
             else:
                 nb_sample = dataset.size - i * n_samples_per_shard
 
-            filepath = "{}{}.records".format(system.pathify(self.dirpath), i)
+            filepath = os.path.join(self.dirpath, f"{i}.records")
 
             # Geographic info of all samples of the record
-            geojson_path = "{}{}.geojson".format(system.pathify(self.dirpath), i)
+            geojson_path = os.path.join(self.dirpath, f"{i}.geojson")
             geojson_dic = {"type": "FeatureCollection",
                            "name": "{}_geoinfo".format(i),
                            "features": []}

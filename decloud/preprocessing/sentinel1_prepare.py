@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 """Pre-process one Sentinel-1 image"""
+import os
 import logging
 import argparse
 import otbApplication
@@ -79,7 +80,7 @@ def main(args):
                                                                                        constants.PATCHSIZE_REF)
 
     # Calibration + concatenation + tiling/compression
-    out_fn = system.pathify(params.out_s1_dir) + out_fn
+    out_fn = os.path.join(params.out_s1_dir, out_fn)
     if system.is_complete(out_fn):
         logging.info("File %s already exists. Skipping.", system.remove_ext_filename(out_fn))
     else:

@@ -25,7 +25,6 @@ import os
 import shutil
 import tensorflow as tf
 from tensorflow import keras
-from decloud.core import system
 from decloud.models.utils import _is_chief
 
 # Callbacks being called at the end of each epoch during training
@@ -45,7 +44,7 @@ class ArchiveCheckpoint(keras.callbacks.Callback):
         self.backup_dir = backup_dir
         self.strategy = strategy
 
-    def on_epoch_end(self, epoch, logs=None):
+    def on_epoch_begin(self, epoch, logs=None):
         """
         At the end of each epoch, we save the directory of BackupAndRestore to a different name for archiving
         """
@@ -92,7 +91,7 @@ class AdditionalValidationSets(keras.callbacks.Callback):
 
             for metric, result in zip(self.model.metrics_names, results):
                 if self.logdir:
-                    writer = tf.summary.create_file_writer(system.pathify(self.logdir) + 'validation_{}'.format(i + 1))
+                    writer = tf.summary.create_file_writer(os.path.join(self.logdir, 'validation_{}'.format(i + 1)))
                     with writer.as_default():
                         tf.summary.scalar('epoch_' + metric, result, step=epoch)  # tensorboard adds an 'epoch_' prefix
                 else:

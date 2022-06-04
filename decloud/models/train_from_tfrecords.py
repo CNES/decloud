@@ -152,7 +152,7 @@ def main(args):
 
         # adding the info to the SavedModel path
         out_savedmodel = None if params.out_savedmodel is None else \
-            system.pathify(params.out_savedmodel) + expe_name + date_tag
+            os.path.join(params.out_savedmodel, expe_name + date_tag)
 
         # Scaling batch size and learning rate accordingly to number of workers
         batch_size_train = params.batch_size_train * n_workers
@@ -203,17 +203,16 @@ def main(args):
                 if params.strategy == 'singlecpu':
                     logging.warning('Checkpoints can not be saved while using singlecpu option. Discarding checkpoints')
                 else:
-                    # Create a backup
-                    backup_dir = system.pathify(params.ckpt_dir) + params.model
-                    callbacks.append(keras.callbacks.experimental.BackupAndRestore(backup_dir=backup_dir))
-
-                    # Save the checkpoint to a persistent location
+                    backup_dir = os.path.join(params.ckpt_dir, params.model)
+                    # Backup (deleted once the model is trained the specified number of epochs)
+                    callbacks.append(keras.callbacks.BackupAndRestore(backup_dir=backup_dir))
+                    # Persistent save (still here after the model is trained)
                     callbacks.append(ArchiveCheckpoint(backup_dir, strategy))
 
             # Define the Keras TensorBoard callback.
             logdir = None
             if params.logdir:
-                logdir = system.pathify(params.logdir) + "{}_{}".format(date_tag, expe_name)
+                logdir = os.path.join(params.logdir, f"{date_tag}_{expe_name}")
                 tensorboard_callback = keras.callbacks.TensorBoard(log_dir=logdir,
                                                                    profile_batch=params.profiling)
                 callbacks.append(tensorboard_callback)

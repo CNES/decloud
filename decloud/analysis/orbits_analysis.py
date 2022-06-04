@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 """
 Analyze the S1 and S2 orbits
 """
+import os
 import argparse
 import numpy as np
 import logging
@@ -80,5 +81,5 @@ for tile_name, tile_handler in th.items():
 
     # Export with pyotb
     out = np.add(initialized_raster, histo_array)  # this is a pyotb object
-    out_fn = system.pathify(params.out_dir) + "{}_s1s2gap_hist.tif".format(tile_name)
+    out_fn = os.path.join(params.out_dir, f"{tile_name}_s1s2gap_hist.tif")
     out.write(out_fn)

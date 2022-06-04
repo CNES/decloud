@@ -8,6 +8,7 @@ from .decloud_unittest import DecloudTest
 
 SAVEDMODEL_FILENAME = "saved_model.pb"
 
+
 def is_savedmodel_written(args_list):
     out_savedmodel = "/tmp/savedmodel"
     base_args = ["--logdir", "/tmp/logdir",
@@ -25,8 +26,9 @@ def is_savedmodel_written(args_list):
 
 
 OS2_TFREC_PTH = "baseline/TFRecord/CRGA"
-OS2_ALL_BANDS_TFREC_PTH = "/baseline/TFRecord/CRGA_all_bands"
-MERANER_ALL_BANDS_TFREC_PTH = "/baseline/TFRecord/CRGA_all_bands"
+OS2_ALL_BANDS_TFREC_PTH = "baseline/TFRecord/CRGA_all_bands"
+MERANER_ALL_BANDS_TFREC_PTH = "baseline/TFRecord/CRGA_all_bands"
+ERRMSG = f"File {SAVEDMODEL_FILENAME} not found !"
 
 
 class TrainFromTFRecordsTest(DecloudTest):
@@ -34,42 +36,42 @@ class TrainFromTFRecordsTest(DecloudTest):
     def test_trainFromTFRecords_os1_unet(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_TFREC_PTH),
                                                "--model", "crga_os1_unet"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_os2_david(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_TFREC_PTH),
                                                "--model", "crga_os2_david"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_os2_unet(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_TFREC_PTH),
                                                "--model", "crga_os2_unet"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_os1_unet_all_bands(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_ALL_BANDS_TFREC_PTH),
                                                "--model", "crga_os1_unet_all_bands"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_os2_david_all_bands(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_ALL_BANDS_TFREC_PTH),
                                                "--model", "crga_os2_david_all_bands"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_os2_unet_all_bands(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(OS2_ALL_BANDS_TFREC_PTH),
                                                "--model", "crga_os2_unet_all_bands"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_meraner_unet(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(MERANER_ALL_BANDS_TFREC_PTH),
                                                "--model", "meraner_unet"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
     def test_trainFromTFRecords_meraner_unet_all_bands(self):
         self.assertTrue(is_savedmodel_written(["--training_record", self.get_path(MERANER_ALL_BANDS_TFREC_PTH),
                                                "--model", "meraner_unet_all_bands"]),
-                        "File {} not found !".format(SAVEDMODEL_FILENAME))
+                        ERRMSG)
 
 
 if __name__ == '__main__':

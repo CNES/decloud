@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 """
 Compute the number of S1 and S2 images used for each patch.
 """
+import os
 import argparse
 import logging
 import numpy as np
@@ -59,7 +60,7 @@ scale = float(params.patch_size) / float(constants.PATCHSIZE_REF)
 for al_bname, al in als:
     for tile_name, tile_handler in th.items():
         # Output files prefix
-        out_prefix = system.pathify(params.out_dir) + tile_name + "_" + al_bname
+        out_prefix = os.join(params.out_dir, tile_name + "_" + al_bname)
 
         # Reference raster grid
         ref_fn = tile_handler.s2_images[0].clouds_stats_fn
@@ -94,6 +95,6 @@ for al_bname, al in als:
 
         # Export
         for key in ["s1", "s2"]:
-            out_fn = "{}_{}_freq.tif".format(out_prefix, key)
+            out_fn = f"{out_prefix}_{key}_freq.tif"
             logging.info("Saving %s", out_fn)
             raster.save_numpy_array_as_raster(ref_fn=ref_fn, np_arr=np_counts[key], out_fn=out_fn, scale=scale)

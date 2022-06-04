@@ -21,9 +21,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 """Classes for Tensorflow summaries"""
+import os
 import tensorflow as tf
 from tensorflow import keras
-from decloud.core import system
 from decloud.preprocessing import constants
 
 
@@ -71,7 +71,7 @@ class PreviewsCallback(keras.callbacks.Callback):
             predicted = self.model.predict(self.test_data)
 
             # Log the images summary.
-            file_writer = tf.summary.create_file_writer(system.pathify(self.logdir) + 'previews')
+            file_writer = tf.summary.create_file_writer(os.path.join(self.logdir, 'previews'))
             with file_writer.as_default():
                 for key in self.target_keys:
                     tf.summary.image("predicted: " + key, get_preview_fn(key)(predicted[key]), step=epoch)
