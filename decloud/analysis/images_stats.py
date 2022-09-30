@@ -31,7 +31,7 @@ import sys
 import json
 import numpy as np
 from matplotlib import pyplot as plt
-import gdal
+from osgeo import gdal
 
 parser = argparse.ArgumentParser(description="dataset test")
 parser.add_argument("--input_dir", help="A directory containing S1 or S2 files", required=True)

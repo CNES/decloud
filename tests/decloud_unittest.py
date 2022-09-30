@@ -4,7 +4,7 @@ import os
 import subprocess
 import unittest
 import filecmp
-import gdal
+from osgeo import gdal
 import otbApplication as otb
 from abc import ABC
 from decloud.core.system import get_env_var, basename

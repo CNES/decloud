@@ -25,7 +25,7 @@ DEALINGS IN THE SOFTWARE.
 import argparse
 import logging
 import elevation
-import gdal
+from osgeo import gdal
 import decloud.preprocessing.constants as constants
 import otbApplication as otb
 from decloud.core import system
