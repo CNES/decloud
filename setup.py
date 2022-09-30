@@ -28,7 +28,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="decloud",
-    version="0.1",
+    version="1.3",
     author="Remi Cresson, Nicolas Narçon, Benjamin Commandre",
     author_email="remi.cresson@inrae.fr",
     description="Deep learning based reconstruction of optical time series using SAR imagery",

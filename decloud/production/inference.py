@@ -66,7 +66,7 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
 
     # Setup TensorFlowModelServe
     system.set_env_var("OTB_TF_NSOURCES", str(len(sources)))
-    infer = pyotb.TensorflowModelServe(execute=False)
+    parameters = {}
 
     # Inputs
     for i, (placeholder, source) in enumerate(sources.items()):
@@ -80,18 +80,18 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
         if placeholder in sources_scales:
             src_rfield = int(rfield / sources_scales[placeholder])
 
-        infer.set_parameters({get_key("il"): [source],
-                              get_key("rfieldx"): src_rfield,
-                              get_key("rfieldy"): src_rfield,
-                              get_key("placeholder"): placeholder})
+        parameters.update({get_key("il"): [source],
+                           get_key("rfieldx"): src_rfield,
+                           get_key("rfieldy"): src_rfield,
+                           get_key("placeholder"): placeholder})
 
     # Model
-    infer.set_parameters({"model.dir": savedmodel_dir, "model.fullyconv": "on",
-                          "output.names": [padded_tensor_name(out_tensor, pad)],
-                          "output.efieldx": efield, "output.efieldy": efield,
-                          "optim.tilesizex": efield, "optim.tilesizey": efield,
-                          "optim.disabletiling": 1})
-    infer.Execute()
+    parameters.update({"model.dir": savedmodel_dir, "model.fullyconv": True,
+                       "output.names": [padded_tensor_name(out_tensor, pad)],
+                       "output.efieldx": efield, "output.efieldy": efield,
+                       "optim.tilesizex": efield, "optim.tilesizey": efield,
+                       "optim.disabletiling": True})
+    infer = pyotb.TensorflowModelServe(parameters)
 
     # Post Processing
     # For ESA Sentinel-2, remove potential zeros the network may have introduced in the valid parts of the image
