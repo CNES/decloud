@@ -36,8 +36,6 @@ Build the docker image:
   stage: Docker build
   allow_failure: false
   extends: .dind_base
-  except:
-    - master
   script:
     - docker info
     - >
