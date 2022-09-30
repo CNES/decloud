@@ -66,7 +66,7 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
 
     # Setup TensorFlowModelServe
     system.set_env_var("OTB_TF_NSOURCES", str(len(sources)))
-    infer = pyotb.TensorflowModelServe(execute=False)
+    infer = pyotb.TensorflowModelServe(frozen=True)
 
     # Inputs
     for i, (placeholder, source) in enumerate(sources.items()):

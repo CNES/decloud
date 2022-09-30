@@ -74,10 +74,10 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
 
     # Setup TensorFlowModelServe
     system.set_env_var("OTB_TF_NSOURCES", str(len(sources)))
-    infer = pyotb.App("TensorflowModelServe", execute=False)
+    infer = pyotb.App("TensorflowModelServe", frozen=True)
 
     # Setup BandMath for post processing
-    bm = pyotb.App("BandMath", execute=False)
+    bm = pyotb.App("BandMath", frozen=True)
     mask_expr = "0"
 
     # Inputs
