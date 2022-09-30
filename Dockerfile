@@ -1,7 +1,7 @@
 # Decloud dockerfile
 # To build the docker image for cpu, do the following:
 #
-# docker build --build-arg "BASE_IMAGE=mdl4eo/otbtf3.0:cpu-basic-dev" .
+# docker build --build-arg "BASE_IMAGE=mdl4eo/otbtf3.3.2:cpu-dev" .
 #
 ARG BASE_IMAGE=mdl4eo/otbtf3.3.2:gpu-dev
 FROM $BASE_IMAGE
