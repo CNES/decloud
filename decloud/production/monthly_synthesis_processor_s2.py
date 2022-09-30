@@ -113,7 +113,7 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
                          "output.names": [padded_tensor_name(out_tensor, pad)],
                          "output.efieldx": efield, "output.efieldy": efield,
                          "optim.tilesizex": efield, "optim.tilesizey": efield,
-                         "optim.disabletiling": 1})
+                         "optim.disabletiling": True})
     infer = pyotb.TensorflowModelServe(infer_params)
 
     # For ESA Sentinel-2, remove potential zeros the network may have introduced in the valid parts of the image

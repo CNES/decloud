@@ -90,7 +90,7 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
                        "output.names": [padded_tensor_name(out_tensor, pad)],
                        "output.efieldx": efield, "output.efieldy": efield,
                        "optim.tilesizex": efield, "optim.tilesizey": efield,
-                       "optim.disabletiling": 1})
+                       "optim.disabletiling": True})
     infer = pyotb.TensorflowModelServe(parameters)
 
     # Post Processing
