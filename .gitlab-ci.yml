@@ -4,8 +4,8 @@ variables:
   GPU_IMAGE_NAME: $CI_REGISTRY_IMAGE:gpu
   DOCKER_BUILDKIT: 1
   DOCKER_DRIVER: overlay2
-  CPU_BASE_IMAGE: gitlab-registry.irstea.fr/remi.cresson/otbtf/3.2.1:cpu-basic-dev
-  GPU_BASE_IMAGE: gitlab-registry.irstea.fr/remi.cresson/otbtf/3.2.1:gpu-basic-dev
+  CPU_BASE_IMAGE: gitlab-registry.irstea.fr/remi.cresson/otbtf:3.3.2-cpu-dev
+  GPU_BASE_IMAGE: gitlab-registry.irstea.fr/remi.cresson/otbtf:3.3.2-gpu-dev
 
 workflow:
   rules:
