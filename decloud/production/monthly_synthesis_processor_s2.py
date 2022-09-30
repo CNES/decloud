@@ -109,7 +109,7 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
                              get_key("placeholder"): placeholder})
 
     # Model
-    infer_params.update({"model.dir": savedmodel_dir, "model.fullyconv": 1,
+    infer_params.update({"model.dir": savedmodel_dir, "model.fullyconv": True,
                          "output.names": [padded_tensor_name(out_tensor, pad)],
                          "output.efieldx": efield, "output.efieldy": efield,
                          "optim.tilesizex": efield, "optim.tilesizey": efield,

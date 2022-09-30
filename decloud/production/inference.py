@@ -86,7 +86,7 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
                            get_key("placeholder"): placeholder})
 
     # Model
-    parameters.update({"model.dir": savedmodel_dir, "model.fullyconv": 1,
+    parameters.update({"model.dir": savedmodel_dir, "model.fullyconv": True,
                        "output.names": [padded_tensor_name(out_tensor, pad)],
                        "output.efieldx": efield, "output.efieldy": efield,
                        "optim.tilesizex": efield, "optim.tilesizey": efield,
