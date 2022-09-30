@@ -74,10 +74,10 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
 
     # Setup TensorFlowModelServe
     system.set_env_var("OTB_TF_NSOURCES", str(len(sources)))
-    infer = pyotb.App("TensorflowModelServe", frozen=True)
+    infer_params = {}
 
     # Setup BandMath for post processing
-    bm = pyotb.App("BandMath", frozen=True)
+    bm_params = {}
     mask_expr = "0"
 
     # Inputs
@@ -93,7 +93,7 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
         if placeholder in sources_scales:
             src_rfield = int(rfield / sources_scales[placeholder])
 
-        infer.set_parameters({get_key("il"): [source]})
+        infer_params.update({get_key("il"): [source]})
 
         # Update post processing BandMath expression
         if placeholder != 'dem' and '20m' not in placeholder:
@@ -101,33 +101,34 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
             n_channels = pyotb.get_nbchannels(source)
             mask_expr += "||"
             mask_expr += "&&".join(["im{}b{}=={}".format(k + 1, b, nodatavalue) for b in range(1, 1 + n_channels)])
-            bm.set_parameters(il=[source])
+            bm_params.update({'il': source})
             k += 1
 
-        infer.set_parameters({get_key("rfieldx"): src_rfield,
-                              get_key("rfieldy"): src_rfield,
-                              get_key("placeholder"): placeholder})
+        infer_params.update({get_key("rfieldx"): src_rfield,
+                             get_key("rfieldy"): src_rfield,
+                             get_key("placeholder"): placeholder})
 
     # Model
-    infer.set_parameters({"model.dir": savedmodel_dir, "model.fullyconv": "on",
-                          "output.names": [padded_tensor_name(out_tensor, pad)],
-                          "output.efieldx": efield, "output.efieldy": efield,
-                          "optim.tilesizex": efield, "optim.tilesizey": efield,
-                          "optim.disabletiling": 1})
-    infer.Execute()
+    infer_params.update({"model.dir": savedmodel_dir, "model.fullyconv": 1,
+                         "output.names": [padded_tensor_name(out_tensor, pad)],
+                         "output.efieldx": efield, "output.efieldy": efield,
+                         "optim.tilesizex": efield, "optim.tilesizey": efield,
+                         "optim.disabletiling": 1})
+    infer = pyotb.TensorflowModelServe(infer_params)
 
     # For ESA Sentinel-2, remove potential zeros the network may have introduced in the valid parts of the image
     if out_pixeltype == otbApplication.ImagePixelType_uint16:
-        n_channels = pyotb.get_nbchannels(infer.out)
+        n_channels = pyotb.get_nbchannels(infer)
         exp = ';'.join([f'(im1b{b}<=1 ? 1 : im1b{b})' for b in range(1, 1 + n_channels)])
-        rmzeros = pyotb.App("BandMathX", il=[infer.out], exp=exp)
+        rmzeros = pyotb.App("BandMathX", il=[infer], exp=exp)
         rmzeros.SetParameterOutputImagePixelType("out", out_pixeltype)
     else:
         rmzeros = infer
 
     # Mask for post processing
     mask_expr += "?0:255"
-    bm.set_parameters(exp=mask_expr)
+    bm_params.update({'exp': mask_expr})
+    bm = pyotb.BandMath(bm_params)
 
     # Closing post processing mask to remove small groups of NoData pixels
     closing = pyotb.App("BinaryMorphologicalOperation", bm, filter="closing", foreval=255, structype="box",
