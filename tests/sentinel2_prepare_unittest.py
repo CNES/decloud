@@ -13,11 +13,6 @@ class Sentinel2PrepareTest(DecloudTest):
                                               "-497_L2A_T31TEJ_C_V2-2"),
                                 "--out_s2_dir", "/tmp/s2_prepare"])
 
-        self.compare_raster_metadata("/tmp/s2_prepare/T31TEJ/SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2/"
-                                     "SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2_FRE_10m.tif",
-                                     self.get_path("baseline/PREPARE/S2_PREPARE/T31TEJ/"
-                                     "SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2/"
-                                     "SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2_FRE_10m.tif"))
         self.compare_images("/tmp/s2_prepare/T31TEJ/SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2/"
                             "SENTINEL2B_20201012-105848-497_L2A_T31TEJ_C_V2-2_FRE_10m.tif",
                             self.get_path("baseline/PREPARE/S2_PREPARE/T31TEJ/"

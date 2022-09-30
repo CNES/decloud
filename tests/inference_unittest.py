@@ -84,7 +84,6 @@ class InferenceTest(DecloudTest):
         self.assertTrue(system.file_exists(outpath))
 
         self.compare_images(outpath, baseline_path)
-        self.compare_raster_metadata(outpath, baseline_path)
 
     def test_inference_with_generic_preprocessor(self):
         # Logger
@@ -128,7 +127,6 @@ class InferenceTest(DecloudTest):
         self.assertTrue(system.file_exists(outpath))
 
         self.compare_images(outpath, baseline_path)
-        self.compare_raster_metadata(outpath, baseline_path)
 
 
 if __name__ == '__main__':
