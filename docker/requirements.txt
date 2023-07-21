@@ -3,4 +3,4 @@ matplotlib
 pytest
 pytest-cov
 pydot
-pyotb
+pyotb==1.5.3
