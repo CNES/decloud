@@ -74,14 +74,12 @@ SENTINEL2
 
 ### ROIs
 
-The ROIs images are used to select the training/validation areas.
-They are binary images that the program will use to determine whether an image patch should be used in training or 
-validation, where 0 means the patch should not be considered and 1 when the patch should be used.
+The ROIs images are used to select the areas for the different datasets (e.g. train, valid, test, etc).
+They are binary images telling when an image patch should be used in datasets, where 0 means the patch should not be considered and 1 when the patch should.
 The ROI images **must have a physical spacing corresponding to 64 pixels of the Sentinel-2 image**, because one 
 pixel refers to one elementary (i.e. the smallest possible) Sentinel-2 image patch, which is **64** as default in decloud.
 
-ROIs are GeoTIFF images named according to the Sentinel tile to which the ROIs relate and ending in either "_train.tif"
-or "_valid.tif" depending on the phase to which the ROI relates.
+ROIs are GeoTIFF images named after the Sentinel tile, and the dataset name (e.g. "train" or "valid").
 
 ```
 ROI_Example
@@ -188,25 +186,21 @@ These ROIs rasters are hence **binary images** which have a pixel spacing corres
 
 #### Generate the files
 
-To create the ROIs data, you can use a GIS software like QGIS to create a vector file with polygons corresponding to the **validation** ROIs, over **all the tiles** you need.
-Then, for each tile, take one **EDG_R1_stats.tif** image as reference (from any Sentinel-2 image of the time series, since only the extent and pixels 
-spacing will be used, and this is the same for all images) and use `rasterization.py`.
-One crucial point is to use the proper reference image since your vector data will be rasterized over **64x64 pixels size** patches, which corresponds to the **elementary patches size** used 
-for statistics computations, that is, **640m x 640m** sized pixel squares if the original Sentinel image have a **10m x 10m** pixel spacing.
+You can generate the ROI masks using the `preprocessing/generate_roi_rasters.py` script.
+This script generates binary images for each datasets (e.g. train, valid, test). You can consider as many datasets as you want (e.g. valid1, valid2, testN...).
+Optionnaly, you can provide vector files for each dataset (e.g. train, valid or test).
+
+Here is an example how to generate ROI for 3 datasets: train (90%), valid (5%), and test (5%):
 
 ```console
-python3 utils/rasterization.py \
-  --vector /home/user/ROI/vectors/T31TEJ.shp \
-  --ref /data/decloud/bucket/S2_PREPARE/T31TEJ/SENTINEL2B_20180225-105018-458_L2A_T31TEJ_C_V2-2/SENTINEL2B_20180225-105018-458_L2A_T31TEJ_C_V2-2_EDG_R1_stats.tif \
-  --output /home/user/ROI
+python3 preprocessing/generate_roi_rasters.py \
+  --tiles /home/user/tiles.json \
+  --datasets train valid test \
+  --props 90 5 5 \
+  --output_dir /home/user/ROI
 ```
 
-This program generates the ROI binary images **for a single tile**. You must repeat the process for the other tiles, **using the same output directory**.
-This program takes the following arguments:
-* '--vector' is the path to the vector file containing the polygons.
-* '--ref' is the path to the image that will be used as reference for rasterization of the vector file (use any **EDG_R1_stats.tif** raster of the tile 
-on which to generate the ROI image).
-* '--output' is the path to the folder where the binary images will be saved.
+Note the you can append `--rois /home/user/vectors/train.gpkg /home/user/vectors/valid.gpkg /home/user/vectors/test.gpkg` to tell the application to select patches lying inside the designated vector files. If not provided, all the locations of the patches grid will be considered.
 
 The program will create the '.tif' files corresponding to the validation and training ROIs in the output folder:
 
@@ -214,7 +208,10 @@ The program will create the '.tif' files corresponding to the validation and tra
 ROI
 │   T31TEJ_train.tif
 │   T31TEJ_valid.tif
+│   T31TEJ_test.tif
 ```
+
+To train models in decloud, you must have at least one "train" and one "valid" dataset.
 
 #### Summarize the files
 
@@ -229,6 +226,8 @@ File **rois.json**:
   "VALID_TILES": ["T31TEJ", "T31TDH", "T31TDJ", "T31TDK"]
 }
 ```
+
+TRAIN is for the training dataset, VALID is for the dataset on which the validation metrics are computed.
 
 ## Patches sampling
 
