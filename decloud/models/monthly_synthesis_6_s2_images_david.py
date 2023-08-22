@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """David model implementation (monthly synthesis of 6 optical images)"""
 from tensorflow.keras import layers
 from decloud.models.model import Model
+from tensorflow import concat
 
 
 class monthly_synthesis_6_s2_images_david(Model):
@@ -48,7 +49,7 @@ class monthly_synthesis_6_s2_images_david(Model):
             net = conv3(net)  # 64
             features.append(net)
 
-        net = layers.concatenate(features, axis=-1)
+        net = concat(features, axis=-1)
         net = deconv1(net)  # 128
         net = deconv2(net)  # 256
         s2_out = conv4(net)  # 256

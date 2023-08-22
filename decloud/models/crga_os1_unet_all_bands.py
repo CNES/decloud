@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 import decloud.preprocessing.constants as constants
 from decloud.models.crga_os1_base_all_bands import crga_os1_base_all_bands
+from tensorflow import concat
 
 
 class crga_os1_unet_all_bands(crga_os1_base_all_bands):
@@ -69,7 +70,7 @@ class crga_os1_unet_all_bands(crga_os1_base_all_bands):
                 features[1].append(net_10m)
                 net = conv2(net_10m)  # 128
             else:  # for post & ante, the is s1, s2 and s2_20m
-                net_10m = layers.concatenate(input_dict[input_image][:2], axis=-1)
+                net_10m = concat(input_dict[input_image][:2], axis=-1)
                 net_10m = conv1_s1s2(net_10m)  # 256
                 features[1].append(net_10m)
                 net_10m = conv2(net_10m)  # 128
@@ -77,7 +78,7 @@ class crga_os1_unet_all_bands(crga_os1_base_all_bands):
                 features_20m = [net_10m, net_20m]
                 if self.has_dem():
                     features_20m.append(conv1_dem(normalized_inputs[constants.DEM_KEY]))
-                net = layers.concatenate(features_20m, axis=-1)
+                net = concat(features_20m, axis=-1)
                 net = conv2_20m(net)  # 128
 
             features[2].append(net)
@@ -94,7 +95,7 @@ class crga_os1_unet_all_bands(crga_os1_base_all_bands):
         def _combine(factor, x=None):
             if x is not None:
                 features[factor].append(x)
-            return layers.concatenate(features[factor], axis=-1)
+            return concat(features[factor], axis=-1)
 
         net = _combine(factor=32)
         net = deconv1(net)  # 16
@@ -114,6 +115,6 @@ class crga_os1_unet_all_bands(crga_os1_base_all_bands):
 
         # 10m-resampled stack that will be the output for inference (not used for training)
         s2_20m_resampled = layers.UpSampling2D(size=(2, 2))(s2_20m_out)
-        s2_all_bands = layers.concatenate([s2_out, s2_20m_resampled], axis=-1)
+        s2_all_bands = concat([s2_out, s2_20m_resampled], axis=-1)
 
         return {"s2_t": s2_out, "s2_20m_t": s2_20m_out, 's2_all_bands_estim': s2_all_bands}

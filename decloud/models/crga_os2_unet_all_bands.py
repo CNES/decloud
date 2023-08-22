@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 from decloud.models.crga_os2_base_all_bands import crga_os2_base_all_bands
 import decloud.preprocessing.constants as constants
+from tensorflow import concat
 
 
 class crga_os2_unet_all_bands(crga_os2_base_all_bands):
@@ -65,7 +66,7 @@ class crga_os2_unet_all_bands(crga_os2_base_all_bands):
         # The network
         features = {factor: [] for factor in [1, 2, 4, 8, 16, 32]}
         for input_image in input_dict:
-            net_10m = layers.concatenate(input_dict[input_image][:2], axis=-1)
+            net_10m = concat(input_dict[input_image][:2], axis=-1)
             net_10m = conv1(net_10m)  # 256
             features[1].append(net_10m)
             net_10m = conv2(net_10m)  # 128
@@ -74,7 +75,7 @@ class crga_os2_unet_all_bands(crga_os2_base_all_bands):
             features_20m = [net_10m, net_20m]
             if self.has_dem():
                 features_20m.append(conv1_dem(normalized_inputs[constants.DEM_KEY]))
-            net = layers.concatenate(features_20m, axis=-1)  # 128
+            net = concat(features_20m, axis=-1)  # 128
             features[2].append(net)
             net = conv3(net)  # 64
             features[4].append(net)
@@ -89,7 +90,7 @@ class crga_os2_unet_all_bands(crga_os2_base_all_bands):
         def _combine(factor, x=None):
             if x is not None:
                 features[factor].append(x)
-            return layers.concatenate(features[factor], axis=-1)
+            return concat(features[factor], axis=-1)
 
         net = _combine(factor=32)
         net = deconv1(net)  # 16
@@ -109,6 +110,6 @@ class crga_os2_unet_all_bands(crga_os2_base_all_bands):
 
         # 10m-resampled stack that will be the output for inference (not used for training)
         s2_20m_resampled = layers.UpSampling2D(size=(2, 2))(s2_20m_out)
-        s2_all_bands = layers.concatenate([s2_out, s2_20m_resampled], axis=-1)
+        s2_all_bands = concat([s2_out, s2_20m_resampled], axis=-1)
 
         return {"s2_target": s2_out, "s2_20m_target": s2_20m_out, 's2_all_bands_estim': s2_all_bands}

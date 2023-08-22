@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 from decloud.models.crga_os2_base_all_bands import crga_os2_base_all_bands
 import decloud.preprocessing.constants as constants
+from tensorflow import concat
 
 
 class crga_os2_david_all_bands(crga_os2_base_all_bands):
@@ -56,7 +57,7 @@ class crga_os2_david_all_bands(crga_os2_base_all_bands):
         conv4 = layers.Conv2D(4, 5, 1, activation='relu', name="s2_estim", padding="same")
         conv4_20m = layers.Conv2D(6, 3, 1, activation='relu', name="s2_20m_estim", padding="same")
         for input_image in input_dict:
-            net_10m = layers.concatenate(input_dict[input_image][:2], axis=-1)
+            net_10m = concat(input_dict[input_image][:2], axis=-1)
             net_10m = conv1(net_10m)  # 256
             net_10m = conv2(net_10m)  # 128
             net_20m = conv1_20m(input_dict[input_image][2])  # 128
@@ -64,11 +65,11 @@ class crga_os2_david_all_bands(crga_os2_base_all_bands):
             features_20m = [net_10m, net_20m]
             if self.has_dem():
                 features_20m.append(conv1_dem(normalized_inputs[constants.DEM_KEY]))
-            net = layers.concatenate(features_20m, axis=-1)  # 128
+            net = concat(features_20m, axis=-1)  # 128
             net = conv3(net)  # 64
             features.append(net)
 
-        net = layers.concatenate(features, axis=-1)
+        net = concat(features, axis=-1)
         net = deconv1(net)  # 128
         net_10m = deconv2(net)  # 256
         net_20m = deconv2_20m(net)  # 128
@@ -78,6 +79,6 @@ class crga_os2_david_all_bands(crga_os2_base_all_bands):
 
         # 10m-resampled stack that will be the output for inference (not used for training)
         s2_20m_resampled = layers.UpSampling2D(size=(2, 2))(s2_20m_out)
-        s2_all_bands = layers.concatenate([s2_out, s2_20m_resampled], axis=-1)
+        s2_all_bands = concat([s2_out, s2_20m_resampled], axis=-1)
 
         return {"s2_target": s2_out, "s2_20m_target": s2_20m_out, 's2_all_bands_estim': s2_all_bands}

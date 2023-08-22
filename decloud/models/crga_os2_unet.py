@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers, initializers
 from decloud.models.crga_os2_base import crga_os2_base
 import decloud.preprocessing.constants as constants
+from tensorflow import concat
 
 
 class crga_os2_unet(crga_os2_base):
@@ -67,13 +68,13 @@ class crga_os2_unet(crga_os2_base):
                                    kernel_initializer=initializers.VarianceScaling())
 
         for input_image in input_dict:
-            net = layers.concatenate(input_dict[input_image], axis=-1)
+            net = concat(input_dict[input_image], axis=-1)
             net = conv1(net)  # 256
             features[1].append(net)
             net = conv2(net)  # 128
             if self.has_dem():
                 net_dem = conv1_dem(normalized_inputs[constants.DEM_KEY])
-                net = layers.concatenate([net, net_dem], axis=-1)
+                net = concat([net, net_dem], axis=-1)
             features[2].append(net)
             net = conv3(net)  # 64
             features[4].append(net)
@@ -88,7 +89,7 @@ class crga_os2_unet(crga_os2_base):
         def _combine(factor, x=None):
             if x is not None:
                 features[factor].append(x)
-            return layers.concatenate(features[factor], axis=-1)
+            return concat(features[factor], axis=-1)
 
         net = _combine(factor=32)
         net = deconv1(net)  # 16
