@@ -22,7 +22,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 """Create some TFRecords from a decloud.dataset"""
-import os
 import argparse
 import sys
 import logging
