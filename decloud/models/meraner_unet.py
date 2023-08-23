@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 from decloud.models.model import Model
 import decloud.preprocessing.constants as constants
+from tensorflow import concat
 
 
 class meraner_unet(Model):
@@ -56,13 +57,13 @@ class meraner_unet(Model):
         deconv5 = layers.Conv2DTranspose(64, 3, 2, activation='relu', name="deconv5_bn_relu", padding="same")
         conv_final = layers.Conv2D(4, 5, 1, name="s2_estim", padding="same")
 
-        net = layers.concatenate([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
+        net = concat([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
         net = conv1(net)  # 256
         features[1].append(net)
         net = conv2(net)  # 128
         if self.has_dem():
             net_dem = conv1_dem(normalized_inputs[constants.DEM_KEY])
-            net = layers.concatenate([net, net_dem], axis=-1)
+            net = concat([net, net_dem], axis=-1)
         features[2].append(net)
         net = conv3(net)  # 64
         features[4].append(net)
@@ -76,7 +77,7 @@ class meraner_unet(Model):
         def _combine(factor, x=None):
             if x is not None:
                 features[factor].append(x)
-            return layers.concatenate(features[factor], axis=-1)
+            return concat(features[factor], axis=-1)
 
         net = deconv1(net)  # 16
         net = _combine(factor=16, x=net)

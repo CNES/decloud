@@ -24,18 +24,32 @@ DEALINGS IN THE SOFTWARE.
 import decloud.preprocessing.constants as constants
 from decloud.models.model import Model
 from tensorflow.keras import layers
+from tensorflow import concat
 
 
 class meraner_unet_all_bands(Model):
     """
     Implementation of a variant of the Meraner et al. network (all bands)
     """
-    def __init__(self, dataset_shapes,
-                 dataset_input_keys=["s1_t", "s2_t", "s2_20m_t",
-                                     constants.DEM_KEY],
-                 model_output_keys=["s2_target"]):
-        super().__init__(dataset_input_keys=dataset_input_keys, model_output_keys=model_output_keys,
-                         dataset_shapes=dataset_shapes)
+    def __init__(
+            self,
+            dataset_shapes,
+            dataset_input_keys=[
+                "s1_t",
+                "s2_t",
+                "s2_20m_t",
+                constants.DEM_KEY
+            ],
+            model_output_keys=[
+                "s2_target",
+                "s2_20m_target"
+            ]
+    ):
+        super().__init__(
+            dataset_input_keys=dataset_input_keys,
+            model_output_keys=model_output_keys,
+            dataset_shapes=dataset_shapes
+        )
 
     def get_outputs(self, normalized_inputs):
         # The network
@@ -58,7 +72,7 @@ class meraner_unet_all_bands(Model):
         conv_final = layers.Conv2D(4, 5, 1, name="s2_estim", padding="same")
         conv_20m_final = layers.Conv2D(6, 3, 1, name="s2_20m_estim", padding="same")
 
-        net_10m = layers.concatenate([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
+        net_10m = concat([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
         net_10m = conv1(net_10m)  # 256
         features[1].append(net_10m)
         net_10m = conv2(net_10m)  # 128
@@ -67,7 +81,7 @@ class meraner_unet_all_bands(Model):
         features_20m = [net_10m, net_20m]
         if self.has_dem():
             features_20m.append(conv1_dem(normalized_inputs[constants.DEM_KEY]))
-        net = layers.concatenate(features_20m, axis=-1)  # 128
+        net = concat(features_20m, axis=-1)  # 128
 
         features[2].append(net)
         net = conv3(net)  # 64
@@ -83,7 +97,7 @@ class meraner_unet_all_bands(Model):
         def _combine(factor, x=None):
             if x is not None:
                 features[factor].append(x)
-            return layers.concatenate(features[factor], axis=-1)
+            return concat(features[factor], axis=-1)
 
         net = _combine(factor=32)
         net = deconv1(net)  # 16
@@ -102,6 +116,10 @@ class meraner_unet_all_bands(Model):
 
         # 10m-resampled stack that will be the output for inference (not used for training)
         s2_20m_resampled = layers.UpSampling2D(size=(2, 2))(s2_20m_out)
-        s2_all_bands = layers.concatenate([s2_out, s2_20m_resampled], axis=-1)
+        s2_all_bands = concat([s2_out, s2_20m_resampled], axis=-1)
 
-        return {"s2_target": s2_out, "s2_20m_target": s2_20m_out, 's2_all_bands_estim': s2_all_bands}
+        return {
+            "s2_target": s2_out,
+            "s2_20m_target": s2_20m_out,
+            "s2_all_bands_estim": s2_all_bands
+        }

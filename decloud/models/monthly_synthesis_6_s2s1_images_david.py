@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 from decloud.models.model import Model
 from decloud.preprocessing import constants
+from tensorflow import concat
 
 
 class monthly_synthesis_6_s2s1_images_david(Model):
@@ -56,11 +57,11 @@ class monthly_synthesis_6_s2s1_images_david(Model):
                 net = conv2(net)  # 128
                 if self.has_dem():
                     net_dem = conv1_dem(normalized_inputs[constants.DEM_KEY])
-                    net = layers.concatenate([net, net_dem], axis=-1)
+                    net = concat([net, net_dem], axis=-1)
                 net = conv3(net)  # 64
                 features.append(net)
 
-        net = layers.concatenate(features, axis=-1)
+        net = concat(features, axis=-1)
         net = deconv1(net)  # 128
         net = deconv2(net)  # 256
         s2_out = conv4(net)  # 256

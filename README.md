@@ -12,10 +12,12 @@ Representative illustrations:
 ## Cite
 
 ```
-@article{cresson2022clouds,
+@inproceedings{cresson2022comparison,
   title={Comparison of convolutional neural networks for cloudy optical images reconstruction from single or multitemporal joint SAR and optical images},
-  author={Cresson, R., Narcon, N., Gaetano, R., Dupuis A., Tanguy, Y., May, S., Commandre, B.},
-  journal={arXiv preprint arXiv:2204.00424},
+  author={Cresson, R{\'e}mi and Nar{\c{c}}on, N and Gaetano, Raffaele and Dupuis, Aurore and Tanguy, Yannick and May, St{\'e}phane and Commandr{\'e}, Benjamin},
+  booktitle={XXIV ISPRS Congress (2022 edition)},
+  volume={43},
+  pages={1317--1326},
   year={2022}
 }
 ```

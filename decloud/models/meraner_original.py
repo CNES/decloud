@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """Implementation of the Meraner et al. original network"""
 from tensorflow.keras import layers
 from decloud.models.model import Model
+from tensorflow import concat
 
 
 class meraner_original(Model):
@@ -50,7 +51,7 @@ class meraner_original(Model):
 
         # The network
         conv1 = layers.Conv2D(resblocks_dim, 3, 1, activation='relu', name="conv1_relu", padding="same")
-        net = layers.concatenate([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
+        net = concat([normalized_inputs["s1_t"], normalized_inputs["s2_t"]], axis=-1)
         net = conv1(net)
         for i in range(n_resblocks):
             net = _resblock(net, i)

@@ -24,6 +24,7 @@ DEALINGS IN THE SOFTWARE.
 from tensorflow.keras import layers
 from decloud.models.crga_os2_base import crga_os2_base
 import decloud.preprocessing.constants as constants
+from tensorflow import concat
 
 
 class crga_os2_david(crga_os2_base):
@@ -50,16 +51,16 @@ class crga_os2_david(crga_os2_base):
         deconv2 = layers.Conv2DTranspose(64, 3, 2, activation='relu', name="deconv2_bn_relu", padding="same")
         conv4 = layers.Conv2D(4, 5, 1, activation='relu', name="s2_estim", padding="same")
         for input_image in input_dict:
-            net = layers.concatenate(input_dict[input_image], axis=-1)
+            net = concat(input_dict[input_image], axis=-1)
             net = conv1(net)  # 256
             net = conv2(net)  # 128
             if self.has_dem():
                 net_dem = conv1_dem(normalized_inputs[constants.DEM_KEY])
-                net = layers.concatenate([net, net_dem], axis=-1)
+                net = concat([net, net_dem], axis=-1)
             net = conv3(net)  # 64
             features.append(net)
 
-        net = layers.concatenate(features, axis=-1)
+        net = concat(features, axis=-1)
         net = deconv1(net)    # 128
         net = deconv2(net)    # 256
         s2_out = conv4(net)   # 256
