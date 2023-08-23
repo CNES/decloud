@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Copyright (c) 2020-2022 INRAE
+Copyright (c) 2020-2023 INRAE
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,7 +28,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="decloud",
-    version="1.3",
+    version="1.4",
     author="Remi Cresson, Nicolas Narçon, Benjamin Commandre",
     author_email="remi.cresson@inrae.fr",
     description="Deep learning based reconstruction of optical time series using SAR imagery",
