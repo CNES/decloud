@@ -4,3 +4,4 @@ pytest
 pytest-cov
 pydot
 pyotb==1.5.3
+gitpython
