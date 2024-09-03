@@ -24,7 +24,7 @@ class InferenceTest(DecloudTest):
         system.basic_logging_init()
 
         # Baseline
-        baseline_path = self.get_path("baseline/reconstructed_baseline_w_mosaic.tif")
+        baseline_path = self.get_path("baseline/reconstructed_baseline.tif")
 
         # Model
         model_path = self.get_path("models/crga_os2_david_116-migration-tensorflow-2_466a1_bt32_bv32_lr7e-05_40gpus")
