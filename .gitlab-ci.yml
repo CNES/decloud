@@ -74,9 +74,9 @@ codespell:
   stage: Tests
   before_script:
    - export PYTHONPATH=$PYTHONPATH:$PWD
-   - wget -P decloud_data --no-verbose --recursive --level=inf --no-parent -R "index.html*" --cut-dirs=3 --no-host-directories http://indexof.montpellier.irstea.priv/projets/geocicd/decloud/
-   - mkdir tests_artifacts
+   - wget https://nextcloud.inrae.fr/s/aNTWLcH28zNomqk/download -O archive.zip && unzip archive.zip
    - export DECLOUD_DATA_DIR="$PWD/decloud_data"
+   - mkdir tests_artifacts
 
   artifacts:
     when: on_failure
