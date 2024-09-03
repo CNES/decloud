@@ -19,8 +19,8 @@ COPY docker/requirements.txt /tmp/requirements.txt
 RUN python3 -m pip install -r /tmp/requirements.txt
 
 # Build remote modules
-RUN cd /src/otb/otb/Modules/Remote/ && git clone https://gitlab.irstea.fr/remi.cresson/SimpleExtractionTools.git
-RUN cd /src/otb/otb/Modules/Remote/ && git clone https://gitlab.irstea.fr/remi.cresson/mlutils.git
+RUN cd /src/otb/otb/Modules/Remote/ && git clone https://forgemia.inra.fr/orfeo-toolbox/otb-simpleextractiontools.git
+RUN cd /src/otb/otb/Modules/Remote/ && git clone https://forgemia.inra.fr/orfeo-toolbox/otb-mlutils.git
 COPY . /src/otb/otb/Modules/Remote/decloud/
 RUN cd /src/otb/build/OTB/build && cmake /src/otb/otb/ -DModule_SimpleExtractionTools=ON -DModule_MLUtils=ON -DBUILD_TESTING=OFF -DModule_OTBDecloud=ON 
 RUN cd /src/otb/build/OTB/build && make -j $(nproc --all) install
