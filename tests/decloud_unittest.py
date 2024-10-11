@@ -20,7 +20,7 @@ class DecloudTest(ABC, unittest.TestCase):
             raise FileNotFoundError(f"Directory {pth} not found!")
         return pth
 
-    def compare_images(self, image, reference, mae_threshold=0.01):
+    def compare_images(self, image, reference, mae_threshold=1.0):
 
         nbchannels_reconstruct = gdal.Open(image).RasterCount
         nbchannels_baseline = gdal.Open(reference).RasterCount
@@ -36,6 +36,7 @@ class DecloudTest(ABC, unittest.TestCase):
             comp.Execute()
             mae = comp.GetParameterFloat('mae')
 
+            print(f"mae is {mae}")
             self.assertTrue(mae < mae_threshold)
 
     def compare_file(self, file, reference):

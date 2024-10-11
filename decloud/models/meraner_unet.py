@@ -90,8 +90,8 @@ class meraner_unet(Model):
         net = deconv5(net)  # 256
         net = _combine(factor=1, x=net)
 
-        net = conv_final(net)
+        s2_out = conv_final(net)
 
-        s2_out = layers.Add()([net, normalized_inputs["s2_t"]])
+#        s2_out = layers.Add()([net, normalized_inputs["s2_t"]])
 
         return {"s2_target": s2_out}  # key must correspond to the key from the dataset

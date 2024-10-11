@@ -3,4 +3,6 @@ matplotlib
 pytest
 pytest-cov
 pydot
-pyotb==1.5.3
+pyotb==1.5.4
+rtree
+scipy

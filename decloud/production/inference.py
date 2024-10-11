@@ -32,8 +32,17 @@ from decloud.preprocessing.constants import padded_tensor_name
 import pyotb
 
 
-def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_nodatavalue, out_pixeltype,
-              nodatavalues=None):
+def inference(
+    sources, 
+    sources_scales, 
+    pad, 
+    ts, 
+    savedmodel_dir, 
+    out_tensor, 
+    out_nodatavalue, 
+    out_pixeltype,
+    nodatavalues=None
+):
     """
     Uses OTBTF TensorflowModelServe for the inference, perform some post-processing to keep only valid pixels.
 
@@ -80,17 +89,24 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
         if placeholder in sources_scales:
             src_rfield = int(rfield / sources_scales[placeholder])
 
-        parameters.update({get_key("il"): [source],
-                           get_key("rfieldx"): src_rfield,
-                           get_key("rfieldy"): src_rfield,
-                           get_key("placeholder"): placeholder})
+        parameters.update({
+            get_key("il"): [source],
+            get_key("rfieldx"): src_rfield,
+            get_key("rfieldy"): src_rfield,
+            get_key("placeholder"): placeholder
+        })
 
     # Model
-    parameters.update({"model.dir": savedmodel_dir, "model.fullyconv": True,
-                       "output.names": [padded_tensor_name(out_tensor, pad)],
-                       "output.efieldx": efield, "output.efieldy": efield,
-                       "optim.tilesizex": efield, "optim.tilesizey": efield,
-                       "optim.disabletiling": True})
+    parameters.update({
+        "model.dir": savedmodel_dir, 
+        "model.fullyconv": True,
+        "output.names": [padded_tensor_name(out_tensor, pad)],
+        "output.efieldx": efield, 
+        "output.efieldy": efield,
+        "optim.tilesizex": efield, 
+        "optim.tilesizey": efield,
+        "optim.disabletiling": True
+    })
     infer = pyotb.TensorflowModelServe(parameters)
 
     # Post Processing
@@ -101,28 +117,54 @@ def inference(sources, sources_scales, pad, ts, savedmodel_dir, out_tensor, out_
     # Applying the NoDatas from input sources to the output result
     if nodatavalues:
         # Potentially transform filepath to pyotb object
-        sources = {k: pyotb.Input(v) if isinstance(v, str) else v for k, v in sources.items()}
+        sources = {
+            k: pyotb.Input(v) if isinstance(v, str) else v 
+            for k, v in sources.items()
+        }
+
         # Defining valid data masks for each source (1=valid data, 0=NoData); i.e. when at least one band is not NoData
-        source_masks = [pyotb.any((sources[placeholder] != nodata)) for placeholder, nodata in nodatavalues.items()]
+        source_masks = [
+            pyotb.any((sources[placeholder] != nodata)) 
+            for placeholder, nodata in nodatavalues.items()
+        ]
         # Merging all the masks: all sources must be valid for the merged mask to be considered valid
         merged_mask = pyotb.all(*source_masks)
 
         # Closing post processing mask to remove small groups of NoData pixels
-        closing = pyotb.BinaryMorphologicalOperation(merged_mask, filter="closing", foreval=1, structype="box",
-                                                     xradius=5, yradius=5)
+        closing = pyotb.BinaryMorphologicalOperation(
+            merged_mask, 
+            filter="closing",
+            foreval=1, 
+            structype="box",
+            xradius=5, 
+            yradius=5
+        )
 
         # Erode post processing mask
-        erode = pyotb.BinaryMorphologicalOperation(closing, filter="erode", foreval=1, structype="box",
-                                                   xradius=pad, yradius=pad)
+        erode = pyotb.BinaryMorphologicalOperation(
+            closing, 
+            filter="erode", 
+            foreval=1, 
+            structype="box",
+            xradius=pad, 
+            yradius=pad
+        )
 
         # Superimpose the eroded post processing mask
-        resample = pyotb.Superimpose(inm=erode, interpolator="nn", lms=192, inr=infer)
+        resample = pyotb.Superimpose(
+            inm=erode, 
+            interpolator="nn", 
+            lms=192, 
+            inr=infer
+        )
 
         # Apply nodata where the post processing mask is "0"
-        mnodata = pyotb.ManageNoData({"in": infer, "mode": "apply", "mode.apply.mask": resample,
-                                      "mode.apply.ndval": out_nodatavalue})
-        mnodata.SetParameterOutputImagePixelType("out", out_pixeltype)
+        mnodata = pyotb.ManageNoData({
+            "in": infer, 
+            "mode": "apply", 
+            "mode.apply.mask": resample,
+            "mode.apply.ndval": out_nodatavalue
+        })
         return mnodata
 
-    infer.SetParameterOutputImagePixelType("out", out_pixeltype)
     return infer

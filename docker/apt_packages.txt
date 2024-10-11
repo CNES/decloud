@@ -1,6 +1,4 @@
 libspatialindex-dev
-python3-rtree
-python3-scipy
 python3-git
 python3-tqdm
 ffmpeg

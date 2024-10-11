@@ -163,8 +163,13 @@ if __name__ == "__main__":
     s1_Nimages, s2_Nimages = 12, 12  # number of images to consider for s1t, s1tm1, s1tp1 & s2tm1, s2tp1
 
     # OTB extended filename that will be used for all writing
-    filename_extension = ("&streaming:type=tiled&streaming:sizemode=height&streaming:sizevalue={}&"
-                          "gdal:co:COMPRESS=DEFLATE&gdal:co:TILED=YES".format(params.ts))
+    ext_fname = (
+        "&streaming:type=tiled"
+        "&streaming:sizemode=height"
+        f"&streaming:sizevalue={params.ts}"
+        "&gdal:co:COMPRESS=DEFLATE"
+        "&gdal:co:TILED=YES"
+    )
 
     # looping through the dates
     for s2_filepath, s2t_product in input_s2_products.items():
@@ -182,8 +187,10 @@ if __name__ == "__main__":
             s1tm1_paths = get_nclosest(s1_Nimages, s2t_product, input_s1_products, 'before')
 
             if any([len(paths) == 0 for paths in [s1tp1_paths, s1tm1_paths, s1t_paths, s2tp1_paths, s2tm1_paths]]):
-                logging.warning('Could not find some T-1 or T+1 or S1T products. '
-                                'Skipping inference: {}'.format(os.path.basename(s2_filepath)))
+                logging.warning(
+                    'Could not find some T-1 or T+1 or S1T products. '
+                    f'Skipping inference: {os.path.basename(s2_filepath)}'
+                )
                 continue
 
             # Potentially skip the inference if the s2_t image is all NoData
@@ -192,31 +199,61 @@ if __name__ == "__main__":
                 s2t_20m = s2t_product.get_raster_20m()
                 # If needed, extracting ROI of all rasters
                 if params.lrx and params.lry and params.ulx and params.uly:
-                    s2t_20m = pyotb.ExtractROI({'in': s2t_20m, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                                'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                                'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry})
+                    s2t_20m = pyotb.ExtractROI({
+                        'in': s2t_20m, 
+                        'mode': 'extent', 
+                        'mode.extent.unit': 'phy',
+                        'mode.extent.ulx': params.ulx, 
+                        'mode.extent.uly': params.uly,
+                        'mode.extent.lrx': params.lrx, 
+                        'mode.extent.lry': params.lry
+                    })
                 s2t_20m = pyotb.Input(s2t_20m) if isinstance(s2t_20m, str) else s2t_20m
                 if np.max(np.asarray(s2t_20m)) <= 0:
                     logging.warning(f'SKIPPING all NoData image: {s2_filepath}')
                     continue
 
             if params.write_intermediate:
-                processor, sources = crga_processor(s1tp1_paths, s1tm1_paths, s1t_paths, s2tp1_paths, s2tm1_paths,
-                                                    s2_filepath, params.dem, params.model, ts=params.ts,
-                                                    with_intermediate=True)
+                processor, sources = crga_processor(
+                    s1tp1_paths, 
+                    s1tm1_paths, 
+                    s1t_paths, 
+                    s2tp1_paths, 
+                    s2tm1_paths,
+                    s2_filepath, 
+                    params.dem, 
+                    params.model, 
+                    ts=params.ts,
+                    with_intermediate=True
+                )
             else:
-                processor = crga_processor(s1tp1_paths, s1tm1_paths, s1t_paths, s2tp1_paths, s2tm1_paths,
-                                           s2_filepath, params.dem, params.model, ts=params.ts)
+                processor = crga_processor(
+                    s1tp1_paths, 
+                    s1tm1_paths, 
+                    s1t_paths, 
+                    s2tp1_paths, 
+                    s2tm1_paths,
+                    s2_filepath, 
+                    params.dem, 
+                    params.model, 
+                    ts=params.ts
+                )
 
             # If needed, extracting ROI of the reconstructed image
             if params.lrx and params.lry and params.ulx and params.uly:
-                processor = pyotb.ExtractROI({'in': processor, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                              'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                              'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry},
-                                             propagate_pixel_type=True)
+                processor = pyotb.ExtractROI({
+                    'in': processor, 
+                    'mode': 'extent', 
+                    'mode.extent.unit': 'phy',
+                    'mode.extent.ulx': params.ulx, 
+                    'mode.extent.uly': params.uly,
+                    'mode.extent.lrx': params.lrx, 
+                    'mode.extent.lry': params.lry},
+                    propagate_pixel_type=True
+                )
 
             # Writing result
-            processor.write(out=output_path, filename_extension=filename_extension)
+            processor.write(out=output_path, filename_extension=ext_fname)
 
             # Writing intermediate results: s2t and the outputs of preprocessor (s1tm1, s1tp1, s1t, s2tm1, s2t)
             if params.write_intermediate:
@@ -224,12 +261,21 @@ if __name__ == "__main__":
                     if name != 'dem':
                         # If needed, extracting ROI
                         if params.lrx and params.lry and params.ulx and params.uly:
-                            image = pyotb.ExtractROI({'in': image, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                                      'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                                      'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry},
-                                                     propagate_pixel_type=True)
+                            image = pyotb.ExtractROI({
+                                'in': image, 
+                                'mode': 'extent', 
+                                'mode.extent.unit': 'phy',
+                                'mode.extent.ulx': params.ulx, 
+                                'mode.extent.uly': params.uly,
+                                'mode.extent.lrx': params.lrx, 
+                                'mode.extent.lry': params.lry},
+                                propagate_pixel_type=True
+                            )
 
                         if isinstance(image, str):  # if needed transform the filepath to pyotb in-memory object
                             image = pyotb.Input(image)
-                        image.write(os.path.join(params.out_dir, output_filename.replace('reconstructed', name)),
-                                    pixel_type='int32', filename_extension=filename_extension)
+                        image.write(
+                            os.path.join(params.out_dir, output_filename.replace('reconstructed', name)),
+                            pixel_type='int32', 
+                            filename_extension=ext_fname
+                        )
