@@ -90,19 +90,32 @@ def main(args):
 
         # Create a undersampled raster where one pixel is equivalent to one patch
         scale = constants.PATCHSIZE_REF / params.patchsize
-        undersampled = pyotb.RigidTransformResample({"in": initialized_raster, "interpolator": "nn",
-                                                     "transform.type.id.scalex": scale,
-                                                     "transform.type.id.scaley": scale})
+        undersampled = pyotb.RigidTransformResample({
+            "in": initialized_raster,
+            "interpolator": "nn",
+            "transform.type.id.scalex": scale,
+            "transform.type.id.scaley": scale
+        })
 
         fg_val = 1
-        rois_arrays = [np.asarray(pyotb.Rasterization({'in': roi, 'im': undersampled,
-                                                       'mode.binary.foreground': fg_val})) if roi else None for roi
-                       in params.rois]
+        rois_arrays = [
+            np.asarray(
+                pyotb.Rasterization({
+                    'in': roi, 
+                    'im': undersampled,
+                    'mode.binary.foreground': fg_val
+                })
+            ) if roi else None 
+            for roi in params.rois
+        ]
 
         # Random selection of zones for the specified datasets, fills the array with 0 for the 1st dataset,
         # 1 for 2nd dataset etc...
-        random_patches = np.random.choice(np.arange(0, len(params.datasets)), p=props,
-                                          size=undersampled.shape)
+        random_patches = np.random.choice(
+            np.arange(0, len(params.datasets)), 
+            p=props,
+            size=undersampled.shape
+        )
 
         # Using a specific ROI for each dataset
         # Patches under a polygon are selected, and this prevails on the random selection.
@@ -115,8 +128,12 @@ def main(args):
             patches = np.add(undersampled, (random_patches == dataset_id).astype(int))  # this is a pyotb object
 
             # Resample to the needed spacing
-            final_roi = pyotb.Superimpose(inm=patches, inr=initialized_raster, interpolator='nn')
-            final_roi.write(os.path.join(params.output_dir, '{}_{}.tif'.format(tile, dataset)))
+            final_roi = pyotb.Superimpose(
+                inm=patches, 
+                inr=initialized_raster,
+                interpolator='nn'
+            )
+            final_roi.write(os.path.join(params.output_dir, f'{tile}_{dataset}.tif'))
 
 
 if __name__ == "__main__":

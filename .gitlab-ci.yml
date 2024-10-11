@@ -18,18 +18,11 @@ stages:
   - Ship
 
 .dind_base:
-  tags: [dind]
-  image: docker/compose:1.29.2
-  variables:
-    DOCKER_TLS_CERTDIR: ""
-    DOCKER_HOST: tcp://docker:2375
+  tags: [godzilla]
+  image: docker:latest
   services:
     - name: docker:dind
-      command: [dockerd, '-H', 'tcp://0.0.0.0:2375']
   before_script:
-    # docker login asks for the password to be passed through stdin for security
-    # we use $CI_REGISTRY_PASSWORD here which is a special variable provided by GitLab
-    # https://docs.gitlab.com/ce/ci/variables/predefined_variables.html
     - echo -n $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
 
 Build the docker image:

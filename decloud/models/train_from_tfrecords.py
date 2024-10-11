@@ -139,7 +139,7 @@ def main(args):
 
     # Name of the experiment
     expe_name = "{}".format(params.model)
-    expe_name += "_{}".format(system.get_commit_hash())
+#    expe_name += "_{}".format(system.get_commit_hash())
     expe_name += "_bt{}".format(params.batch_size_train)
     expe_name += "_bv{}".format(params.batch_size_valid)
     expe_name += "_lr{}".format(params.learning_rate)

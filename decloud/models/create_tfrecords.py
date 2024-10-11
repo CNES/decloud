@@ -39,14 +39,17 @@ def main(args):
     parser.add_argument("--output_train", help="Output directory for training TFRecord shards")
     parser.add_argument("--acquisitions_valid", nargs='+', help="Paths to validation acquisition files")
     parser.add_argument("--outputs_valid", nargs='+', help="Output directories for valid TFRecord shards")
+    parser.add_argument("--acquisitions_test", nargs='+', help="Paths to test acquisition files")
+    parser.add_argument("--outputs_test", nargs='+', help="Output directories for test TFRecord shards")
     parser.add_argument("--tiles", "-t", required=True, help="Path to a .json file used to instantiate the TilesLoader")
     parser.add_argument("--rois", required=True, help="Path to a .json file used to instantiate the RoisLoader")
     parser.add_argument('--patchsize', '-p', type=int, default=256, help="Patch size")
     parser.add_argument('--maxntrain', type=int, default=None, help="Max number of training samples")
     parser.add_argument('--maxnvalid', type=int, default=None, help="Max number of validation samples")
+    parser.add_argument('--maxntest', type=int, default=None, help="Max number of test samples")
     parser.add_argument('--n_samples_per_shard', '-s', type=int, default=100, help="Number of samples per shard")
     parser.add_argument('--oversampling', dest='oversampling', action='store_true',
-                        help="Performs validation on oversampled dataset")
+                        help="Performs validation/test on oversampled dataset")
     parser.add_argument('--constant', dest='constant', action='store_true',
                         help="Create datasets with spatially constant number of samples")
     parser.add_argument('--constant_nb', type=int, default=10, help="Max number of samples per patch, in constant mode")
@@ -74,10 +77,15 @@ def main(args):
     # Tiles ROIs
     rois = RoisLoader(the_json=params.rois)
 
-    def _ds2tfrecord(acquisition_layout, output_dir, max_nb_of_samples, iterator_class, roi_key="roi_valid"):
+    def _ds2tfrecord(acquisition_layout, output_dir, max_nb_of_samples, iterator_class, roi_key):
         acquisitions = AcquisitionFactory.get_acquisition(acquisition_layout)
-        ds = Dataset(acquisitions_layout=acquisitions, tile_handlers=th, tile_rois=rois[roi_key],
-                     iterator_class=iterator_class, max_nb_of_samples=max_nb_of_samples)
+        ds = Dataset(
+            acquisitions_layout=acquisitions, 
+            tile_handlers=th, 
+            tile_rois=rois[roi_key],                     
+            iterator_class=iterator_class, 
+            max_nb_of_samples=max_nb_of_samples
+        )
         tfrecord = TFRecords(output_dir)
         tfrecord.ds2tfrecord(ds, n_samples_per_shard=params.n_samples_per_shard, drop_remainder=params.drop_remainder)
 
@@ -88,14 +96,33 @@ def main(args):
         iterator = partial(ConstantIterator, nbsample_max=params.constant_nb)
 
     if params.acquisition_train is not None:
-        _ds2tfrecord(acquisition_layout=params.acquisition_train, output_dir=params.output_train, roi_key="roi_train",
-                     max_nb_of_samples=params.maxntrain, iterator_class=iterator)
+        _ds2tfrecord(
+            acquisition_layout=params.acquisition_train, 
+            output_dir=params.output_train,
+            roi_key="roi_train",
+            max_nb_of_samples=params.maxntrain, 
+            iterator_class=iterator
+        )
 
     if params.acquisitions_valid is not None:
         for acquisition_valid, output_dir in list(zip(params.acquisitions_valid, params.outputs_valid)):
-            _ds2tfrecord(acquisition_layout=acquisition_valid, output_dir=output_dir,
-                         iterator_class=iterator if not params.oversampling else OversamplingIterator,
-                         max_nb_of_samples=params.maxnvalid)
+            _ds2tfrecord(
+                acquisition_layout=acquisition_valid, 
+                output_dir=output_dir,                         
+                roi_key="roi_valid",
+                iterator_class=iterator if not params.oversampling else OversamplingIterator,                         
+                max_nb_of_samples=params.maxnvalid
+            )
+
+    if params.acquisitions_test is not None:
+        for acquisition_test, output_dir in list(zip(params.acquisitions_test, params.outputs_test)):
+            _ds2tfrecord(
+                acquisition_layout=acquisition_test, 
+                output_dir=output_dir,
+                roi_key="roi_test",                         
+                iterator_class=iterator if not params.oversampling else OversamplingIterator,                         
+                max_nb_of_samples=params.maxntest
+            )
 
 
 if __name__ == "__main__":

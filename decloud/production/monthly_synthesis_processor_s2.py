@@ -104,23 +104,30 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
             bm_params.update({'il': source})
             k += 1
 
-        infer_params.update({get_key("rfieldx"): src_rfield,
-                             get_key("rfieldy"): src_rfield,
-                             get_key("placeholder"): placeholder})
+        infer_params.update({
+            get_key("rfieldx"): src_rfield,
+            get_key("rfieldy"): src_rfield,
+            get_key("placeholder"): placeholder
+        })
 
     # Model
-    infer_params.update({"model.dir": savedmodel_dir, "model.fullyconv": True,
-                         "output.names": [padded_tensor_name(out_tensor, pad)],
-                         "output.efieldx": efield, "output.efieldy": efield,
-                         "optim.tilesizex": efield, "optim.tilesizey": efield,
-                         "optim.disabletiling": True})
+    infer_params.update({
+        "model.dir": savedmodel_dir, 
+        "model.fullyconv": True,
+        "output.names": [padded_tensor_name(out_tensor, pad)],
+        "output.efieldx": efield, 
+        "output.efieldy": efield,
+        "optim.tilesizex": efield,
+        "optim.tilesizey": efield,
+        "optim.disabletiling": True
+    })
     infer = pyotb.TensorflowModelServe(infer_params)
 
     # For ESA Sentinel-2, remove potential zeros the network may have introduced in the valid parts of the image
     if out_pixeltype == otbApplication.ImagePixelType_uint16:
         n_channels = pyotb.get_nbchannels(infer)
         exp = ';'.join([f'(im1b{b}<=1 ? 1 : im1b{b})' for b in range(1, 1 + n_channels)])
-        rmzeros = pyotb.App("BandMathX", il=[infer], exp=exp)
+        rmzeros = pyotb.BandMathX(infer, exp=exp)
         rmzeros.SetParameterOutputImagePixelType("out", out_pixeltype)
     else:
         rmzeros = infer
@@ -131,19 +138,40 @@ def monthly_synthesis_inference(sources, sources_scales, pad, ts, savedmodel_dir
     bm = pyotb.BandMath(bm_params)
 
     # Closing post processing mask to remove small groups of NoData pixels
-    closing = pyotb.App("BinaryMorphologicalOperation", bm, filter="closing", foreval=255, structype="box",
-                        xradius=5, yradius=5)
+    closing = pyotb.BinaryMorphologicalOperation(
+        bm, 
+        filter="closing", 
+        foreval=255, 
+        structype="box",
+        xradius=5, 
+        yradius=5
+    )
 
     # Erode post processing mask
-    erode = pyotb.App("BinaryMorphologicalOperation", closing, filter="erode", foreval=255, structype="box",
-                      xradius=pad, yradius=pad)
+    erode = pyotb.BinaryMorphologicalOperation(
+        closing, 
+        filter="erode", 
+        foreval=255, 
+        structype="box",
+        xradius=pad, 
+        yradius=pad
+    )
 
     # Superimpose the eroded post processing mask
-    resample = pyotb.App("Superimpose", inm=erode, interpolator="nn", lms=192, inr=infer)
+    resample = pyotb.Superimpose(
+        inm=erode, 
+        interpolator="nn", 
+        lms=192, 
+        inr=infer
+    )
 
     # Apply nodata where the post processing mask is "0"
-    mnodata = pyotb.App("ManageNoData", {"in": rmzeros, "mode": "apply", "mode.apply.mask": resample,
-                                         "mode.apply.ndval": out_nodatavalue})
+    mnodata = pyotb.ManageNoData({
+        "in": rmzeros, 
+        "mode": "apply", 
+        "mode.apply.mask": resample,
+        "mode.apply.ndval": out_nodatavalue
+    })
 
     mnodata.SetParameterOutputImagePixelType("out", out_pixeltype)
     return mnodata
@@ -258,22 +286,39 @@ if __name__ == "__main__":
 
     # Inference
     out_tensor = "s2_estim"
-    processor = monthly_synthesis_inference(sources=sources, sources_scales=sources_scales, pad=64,
-                                            ts=params.ts, savedmodel_dir=params.model, out_tensor=out_tensor,
-                                            out_nodatavalue=-10000, out_pixeltype=otbApplication.ImagePixelType_int16)
+    processor = monthly_synthesis_inference(
+        sources=sources, 
+        sources_scales=sources_scales, 
+        pad=64,
+        ts=params.ts,
+        savedmodel_dir=params.model, 
+        out_tensor=out_tensor,
+        out_nodatavalue=-10000, 
+        out_pixeltype=otbApplication.ImagePixelType_int16
+    )
 
     # If needed, extracting ROI of the reconstructed image
     if params.lrx and params.lry and params.ulx and params.uly:
-        processor = pyotb.App('ExtractROI',
-                              {'in': processor, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                               'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                               'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry})
+        processor = pyotb.ExtractROI({
+            'in': processor, 
+            'mode': 'extent', 
+            'mode.extent.unit': 'phy',
+            'mode.extent.ulx': params.ulx, 
+            'mode.extent.uly': params.uly,
+            'mode.extent.lrx': params.lrx, 
+            'mode.extent.lry': params.lry
+        })
 
     # OTB extended filename that will be used for all writing
-    filename_extension = ("&streaming:type=tiled&streaming:sizemode=height&streaming:sizevalue={}&"
-                          "gdal:co:COMPRESS=DEFLATE&gdal:co:TILED=YES".format(params.ts))
+    ext_fname = (
+        "&streaming:type=tiled"
+        "&streaming:sizemode=height"
+        f"&streaming:sizevalue={params.ts}"
+        "&gdal:co:COMPRESS=DEFLATE"
+        "&gdal:co:TILED=YES"
+    )
 
-    processor.write(out=output_path, filename_extension=filename_extension)
+    processor.write(out=output_path, filename_extension=ext_fname)
 
     # Writing the inputs sources of the model
     if params.write_intermediate:
@@ -281,11 +326,20 @@ if __name__ == "__main__":
             if name != 'dem':
                 # If needed, extracting ROI of every rasters
                 if params.lrx and params.lry and params.ulx and params.uly:
-                    source = pyotb.App('ExtractROI',
-                                       {'in': source, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                        'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                        'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry})
-                pyotb.Input(source).write(os.path.join(os.path.dirname(output_path),
-                                                       os.path.basename(output_path).replace('monthly_synthesis',
-                                                                                             name)),
-                                          pixel_type='int32', filename_extension=filename_extension)
+                    source = pyotb.ExtractROI({
+                        'in': source, 
+                        'mode': 'extent', 
+                        'mode.extent.unit': 'phy',
+                        'mode.extent.ulx': params.ulx, 
+                        'mode.extent.uly': params.uly,
+                        'mode.extent.lrx': params.lrx, 
+                        'mode.extent.lry': params.lry
+                    })
+                pyotb.Input(source).write(
+                    os.path.join(
+                        os.path.dirname(output_path),
+                        os.path.basename(output_path).replace('monthly_synthesis', name)
+                    ),
+                    pixel_type='int16', 
+                    filename_extension=ext_fname
+                )

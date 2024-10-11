@@ -33,8 +33,19 @@ from decloud.core import system
 import pyotb
 
 
-def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20m=None,
-                      s1_Nimages=12, ts=256, pad=64, with_20m_bands=False, with_intermediate=False):
+def meraner_processor(
+    il_s1, 
+    in_s2, 
+    savedmodel, 
+    dem=None, 
+    output=None, 
+    output_20m=None,
+    s1_Nimages=12, 
+    ts=256, 
+    pad=64, 
+    with_20m_bands=False, 
+    with_intermediate=False
+):
     """
     Apply Meraner model to input sources.
 
@@ -72,8 +83,10 @@ def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20
     input_s1_images_10m = [product.get_raster_10m() for product in input_s1_products]
     s2t = s2t_product.get_raster_10m()
 
-    sources = {"s1_t": pyotb.Mosaic(il=input_s1_images_10m, nodata=0),
-               "s2_t": s2t}
+    sources = {
+        "s1_t": pyotb.Mosaic(il=input_s1_images_10m, nodata=0),
+        "s2_t": s2t
+    }
 
     if with_20m_bands:
         s2t_20m = s2t_product.get_raster_20m()
@@ -85,17 +98,28 @@ def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20
     sources_scales = {"dem": 2, "s2_20m_t": 2}
 
     # OTB extended filename that will be used for all writing
-    filename_extension = ("&streaming:type=tiled&streaming:sizemode=height&streaming:sizevalue={}&"
-                          "gdal:co:COMPRESS=DEFLATE&gdal:co:TILED=YES".format(ts))
+    ext_fname = (
+        "&streaming:type=tiled"
+        "&streaming:sizemode=height"
+        f"&streaming:sizevalue={ts}"
+        "&gdal:co:COMPRESS=DEFLATE"
+        "&gdal:co:TILED=YES"
+    )
 
     # Inference
     if with_20m_bands:
         out_tensor = "s2_all_bands_estim"  # stack of the 10m reconstruction and 20m reconstruction (resampled to 10m)
-        resampled_all_bands = inference(sources, sources_scales, pad=pad, ts=ts,
-                                        savedmodel_dir=savedmodel, out_tensor=out_tensor,
-                                        out_nodatavalue=s2t_product.get_nodatavalue(),
-                                        out_pixeltype=s2t_product.get_raster_10m_encoding(),
-                                        nodatavalues={"s1_t": 0, "s2_t": -10000})
+        resampled_all_bands = inference(
+            sources, 
+            sources_scales, 
+            pad=pad, 
+            ts=ts,
+            savedmodel_dir=savedmodel,
+            out_tensor=out_tensor,
+            out_nodatavalue=s2t_product.get_nodatavalue(),
+            out_pixeltype=s2t_product.get_raster_10m_encoding(),
+            nodatavalues={"s1_t": 0, "s2_t": -10000}
+        )
 
         # If the user didn't specify output paths, return in-memory object
         if not (output and output_20m):
@@ -105,24 +129,34 @@ def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20
 
         # temporary path for the stack of 10m+20m bands
         temp_outpath = system.join(system.dirname(output_20m), 'temp_all_bands_' + system.basename(output_20m))
-        resampled_all_bands.write(out=temp_outpath, filename_extension=filename_extension)
+        resampled_all_bands.write(out=temp_outpath, filename_extension=ext_fname)
 
         stack = pyotb.Input(temp_outpath)
         # Writing 10m bands
-        stack[:, :, :4].write(out=output, filename_extension=filename_extension)
+        stack[:, :, :4].write(out=output, filename_extension=ext_fname)
         # Resampling and writing 20m bands
-        final_res_20m = pyotb.RigidTransformResample({'in': stack[:, :, 4:], 'interpolator': 'nn',
-                                                      'transform.type.id.scaley': 0.5, 'transform.type.id.scalex': 0.5})
-        final_res_20m.write(out=output_20m, filename_extension=filename_extension)
+        final_res_20m = pyotb.RigidTransformResample({
+            'in': stack[:, :, 4:], 
+            'interpolator': 'nn',
+            'transform.type.id.scaley': 0.5, 
+            'transform.type.id.scalex': 0.5
+        })
+        final_res_20m.write(out=output_20m, filename_extension=ext_fname)
         os.remove(temp_outpath)
 
     else:
         out_tensor = "s2_estim"
-        processor = inference(sources, sources_scales, pad=pad, ts=ts,
-                              savedmodel_dir=savedmodel, out_tensor=out_tensor,
-                              out_nodatavalue=s2t_product.get_nodatavalue(),
-                              out_pixeltype=s2t_product.get_raster_10m_encoding(),
-                              nodatavalues={"s1_t": 0, "s2_t": -10000})
+        processor = inference(
+            sources, 
+            sources_scales, 
+            pad=pad, 
+            ts=ts,
+            savedmodel_dir=savedmodel, 
+            out_tensor=out_tensor,
+            out_nodatavalue=s2t_product.get_nodatavalue(),
+            out_pixeltype=s2t_product.get_raster_10m_encoding(),
+            nodatavalues={"s1_t": 0, "s2_t": -10000
+        })
 
         # If the user didn't specify output path, return in-memory object
         if not output:
@@ -130,19 +164,21 @@ def meraner_processor(il_s1, in_s2, savedmodel, dem=None, output=None, output_20
                 return processor, sources
             return processor
 
-        processor.write(out="{}".format(output), filename_extension=filename_extension)
+        processor.write(out=output, filename_extension=ext_fname)
 
         if with_intermediate and output:
             # Writing the input sources, in the same directory as output with a suffix
             for name, source in sources.items():
                 if name != 'dem':
-                    source.write(os.path.splitext(output)[0] + '_{}.tif'.format(name),
-                                 pixel_type='int32',
-                                 filename_extension=filename_extension)
+                    source.write(
+                        os.path.splitext(output)[0] + f'_{name}.tif',
+                        pixel_type='int32',
+                        filename_extension=ext_fname
+                    )
 
 
 # ------------------------------------------------------- Main ---------------------------------------------------------
-def main():
+def main(args):
     # Logger
     system.basic_logging_init()
 
@@ -172,12 +208,20 @@ def main():
         parser.print_help()
         parser.exit()
 
-    params = parser.parse_args()
+    params = parser.parse_args(args)
 
-    meraner_processor(params.il_s1, params.in_s2, params.savedmodel, params.in_dem,
-                      params.output, params.output_20m, ts=params.ts, pad=params.pad,
-                      with_20m_bands=params.with_20m_bands)
+    meraner_processor(
+        params.il_s1, 
+        params.in_s2, 
+        params.savedmodel, 
+        params.in_dem,
+        params.output,
+        params.output_20m, 
+        ts=params.ts, 
+        pad=params.pad,
+        with_20m_bands=params.with_20m_bands
+    )
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    system.run_and_terminate(main)

@@ -145,8 +145,13 @@ if __name__ == "__main__":
         system.mkdir(params.out_dir)
 
     # OTB extended filename that will be used for all writing
-    filename_extension = ("&streaming:type=tiled&streaming:sizemode=height&streaming:sizevalue={}&"
-                          "gdal:co:COMPRESS=DEFLATE&gdal:co:TILED=YES".format(params.ts))
+    ext_fname = (
+        "&streaming:type=tiled"
+        "&streaming:sizemode=height"
+        f"&streaming:sizevalue={params.ts}"
+        "&gdal:co:COMPRESS=DEFLATE"
+        "&gdal:co:TILED=YES"
+    )
 
     # looping through the input Sentinel-2 images
     for s2_filepath, s2t_product in input_s2_products.items():
@@ -163,29 +168,54 @@ if __name__ == "__main__":
                 s2t_20m = s2t_product.get_raster_20m()
                 # If needed, extracting ROI of all rasters
                 if params.lrx and params.lry and params.ulx and params.uly:
-                    s2t_20m = pyotb.ExtractROI({'in': s2t_20m, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                                'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                                'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry})
+                    s2t_20m = pyotb.ExtractROI({
+                        'in': s2t_20m, 
+                        'mode': 'extent', 
+                        'mode.extent.unit': 'phy',
+                        'mode.extent.ulx': params.ulx, 
+                        'mode.extent.uly': params.uly,
+                        'mode.extent.lrx': params.lrx, 
+                        'mode.extent.lry': params.lry
+                    })
                 s2t_20m = pyotb.Input(s2t_20m) if isinstance(s2t_20m, str) else s2t_20m
                 if np.max(np.asarray(s2t_20m)) <= 0:
                     logging.warning(f'SKIPPING all NoData image: {s2_filepath}')
                     continue
 
             if params.write_intermediate:
-                processor, sources = meraner_processor(il_s1, s2_filepath, params.model, params.dem, s1_Nimages=12,
-                                                       ts=params.ts, with_intermediate=True)
+                processor, sources = meraner_processor(
+                    il_s1, 
+                    s2_filepath, 
+                    params.model, 
+                    params.dem, 
+                    s1_Nimages=12,
+                    ts=params.ts, 
+                    with_intermediate=True
+                )
             else:
-                processor = meraner_processor(il_s1, s2_filepath, params.model, params.dem, s1_Nimages=12,
-                                              ts=params.ts)
+                processor = meraner_processor(
+                    il_s1, 
+                    s2_filepath, 
+                    params.model, 
+                    params.dem, 
+                    s1_Nimages=12,
+                    ts=params.ts
+                )
 
             # If needed, extracting ROI of the reconstructed image
             if params.lrx and params.lry and params.ulx and params.uly:
-                processor = pyotb.ExtractROI({'in': processor, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                              'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                              'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry},
-                                             propagate_pixel_type=True)
+                processor = pyotb.ExtractROI({
+                    'in': processor, 
+                    'mode': 'extent', 
+                    'mode.extent.unit': 'phy',
+                    'mode.extent.ulx': params.ulx, 
+                    'mode.extent.uly': params.uly,
+                    'mode.extent.lrx': params.lrx, 
+                    'mode.extent.lry': params.lry},
+                    propagate_pixel_type=True
+                )
 
-            processor.write(out=output_path, filename_extension=filename_extension)
+            processor.write(out=output_path, filename_extension=ext_fname)
 
             # Writing the inputs sources of the model
             if params.write_intermediate:
@@ -193,12 +223,24 @@ if __name__ == "__main__":
                     if name != 'dem':
                         # If needed, extracting ROI of every rasters
                         if params.lrx and params.lry and params.ulx and params.uly:
-                            source = pyotb.ExtractROI({'in': source, 'mode': 'extent', 'mode.extent.unit': 'phy',
-                                                       'mode.extent.ulx': params.ulx, 'mode.extent.uly': params.uly,
-                                                       'mode.extent.lrx': params.lrx, 'mode.extent.lry': params.lry},
-                                                      propagate_pixel_type=True)
+                            source = pyotb.ExtractROI({
+                                'in': source, 
+                                'mode': 'extent', 
+                                'mode.extent.unit': 'phy',
+                                'mode.extent.ulx': params.ulx, 
+                                'mode.extent.uly': params.uly,
+                                'mode.extent.lrx': params.lrx, 
+                                'mode.extent.lry': params.lry},
+                                propagate_pixel_type=True
+                            )
 
                         if isinstance(source, str):  # if needed transform the filepath to pyotb in-memory object
                             source = pyotb.Input(source)
-                        source.write(os.path.join(params.out_dir, output_filename.replace('reconstructed', name)),
-                                     pixel_type='int32', filename_extension=filename_extension)
+                        source.write(
+                            os.path.join(
+                                params.out_dir, 
+                                output_filename.replace('reconstructed', name)
+                            ),
+                            pixel_type='int16', 
+                            filename_extension=ext_fname
+                        )
